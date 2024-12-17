@@ -1,0 +1,186 @@
+extends layout.jade
+
+block toolbar
+    if(role == 'teacher')   
+        button(onclick="togglePopup('teacher')") Create Class
+    if(role == 'student')
+        button(onclick="togglePopup('student')") Add Class
+    button(onclick="findClass()") Change Class
+    button(onclick="logOut()") Sign Out
+block content
+    div(id="assignmentHolder" class="assignments")
+    div(id="changeClassOverlay" class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;">Popup Form)
+            form(class="form-container")
+                label(class="form-label" for="name") Select Your Class
+                div(id="classHolder" class="holder-popup")
+
+            button(class="btn-close-popup" onclick="togglePopup('changeClass')") Close
+    //teacher form   
+    div(id="createClassOverlay" class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;">Popup Form)
+            form(class="form-container")
+                label(class="form-label" for="name") Type in your Class ID
+                input(id="classIdInput" type="text")
+                label(class="form-label" for="name") Insert Class Name:
+                input(id="classNameInput" type="text")
+                p(id="errorText" class="error")
+            button(class="btn-submit" onclick="createClass()") Submit
+            button(class="btn-close-popup" onclick="togglePopup('teacher')") Close
+    //student form
+    div(id="addClassOverlay" class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;") Popup Form
+            form(class="form-container")
+                label(class="form-label" for="name") Type in your Class ID
+                input(id="classIdInput" type="text")
+                p(class="error" id="errorText")
+            button(class="btn-submit" onclick="addClass()") Submit
+            button(class="btn-close-popup" onclick="togglePopup('student')") Close
+
+    script.
+        function logOut() {
+            fetch('/mainPage/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        // Handle error
+                        console.log("Error can't log out");
+                    } else {
+                        //success
+                        window.location.href = '/frontPage';
+                    }
+                });
+        }
+        function findClass() {
+            var popup = document.getElementById("changeClassOverlay");
+            popup.classList.toggle("show");
+            // Fill it up with classes
+            const container = document.getElementById('classHolder');
+            container.innerHTML = '';  // Clear any previous buttons
+            // Send the data to the server via a POST request
+            fetch('/mainPage/findClasses', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        // Handle error
+                        let errorText = document.createElement('p');
+                        errorText.innerHTML = data.error;
+                        container.appendChild(errorText);
+                    } else {
+                        // Successful response
+                        const classNames = data.classes;
+
+                        if (classNames.length === 0) {
+                            // Handle case where no classes are returned
+                            let noClassesMessage = document.createElement('p');
+                            noClassesMessage.innerHTML = 'No classes found';
+                            container.appendChild(noClassesMessage);
+                        } else {
+                            // Create buttons for each class
+                            for (let i = 0; i < classNames.length; i++) {
+                                let button = document.createElement('button');
+                                button.innerHTML = classNames[i];
+                                button.onclick = function () {
+                                    selectClass(classNames[i]);
+                                };
+                                container.appendChild(button);
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    // Handle fetch error
+                    let errorText = document.createElement('p');
+                    errorText.innerHTML = error;
+                    container.appendChild(errorText);
+                });
+        }
+        function togglePopup(role){
+            if(role == 'student'){
+                var popup = document.getElementById("addClassOverlay");
+                popup.classList.toggle("show");
+            }else if(role == 'teacher'){
+                var popup = document.getElementById("createClassOverlay");
+                popup.classList.toggle("show");
+            }else if(role == 'changeClass'){
+                var popup = document.getElementById("changeClassOverlay");
+                popup.classList.toggle("show");
+            }
+            
+        }
+        function createClass() {
+            //create a class with the information in classIdInput and classNameInput
+            var classId = $('#classIdInput').val();
+            var className = $('#classNameInput').val();
+
+            // Send the data to the server via a POST request
+            fetch('/mainPage/addClass', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ classId, className })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        // Handle error
+                        let errorText = document.getElementById("errorText");
+                        errorText.innerHTML = data.error;
+                    } else {
+                        // Successful response
+                        console.log(data.classes);
+                        togglePopup();
+                    }
+                })
+                .catch(error => {
+                    // Handle fetch error
+                    let errorText = document.getElementById("errorText");
+                    errorText.innerHTML = error;
+                });
+
+        }
+        function addClass() {
+            var classId = $('#classIdInput').val();
+            //add the class to the database
+            fetch('/mainPage/addClassConnection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ classId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        // Handle error
+                        let errorText = document.getElementById("errorText");
+                        errorText.innerHTML = data.error;
+                    } else {
+                        // Successful response
+                        console.log(data.classes);
+                        toggleAddPopup();
+                    }
+                })
+                .catch(error => {
+                    // Handle fetch error
+                    let errorText = document.getElementById("errorText");
+                    errorText.innerHTML = error;
+                });
+        }
+        function selectClass(className) {
+            //tell the server to select this class
+        }
