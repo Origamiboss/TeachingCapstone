@@ -77,4 +77,23 @@ router.post('/logout', (req, res) => {
     });
 });
 
+router.post('/findAssignments', async (req, res) => {
+    // Get the className
+    const { className } = req.body;
+
+    try {
+        const result = await dbUtils.findAssignments(className);  // `await` is used here
+
+        if (result && result.assignments) {  // Fix variable name
+            return res.json({ status: 'success', assignments: result.assignments });  // Use `result.assignments`
+        } else {
+            return res.status(400).json({ error: 'No assignments found' });
+        }
+    } catch (error) {
+        console.error('Error finding assignments:', error);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+
 module.exports = router;

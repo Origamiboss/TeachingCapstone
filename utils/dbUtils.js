@@ -138,6 +138,31 @@ const dbUtils = {
                 return resolve({ status: 'success', message: 'Class added successfully!' });
             });
         });
+    },
+    findAssignments: (className) => {
+        return new Promise((resolve, reject) => {
+            var sql = 'SELECT DISTINCT * FROM assignmnet WHERE className = ?';
+
+            con.query(sql, [className], (err, result) => {
+                if (err) {
+                    console.error("Error retrieving Assignments from database:", err);
+                    return reject('Error retrieving Assignments from database');
+                }
+
+                if (result.length === 0) {
+                    return reject('No Assignments Found');
+                }
+
+                const assignments = result.map(row => ({
+                    name: row.name,
+                    id: row.id,
+                    dueDate: row.dueDate,
+                    grade: row.grade,
+                    className: row.className
+                }));
+                return resolve({ status: 'success', assignments: assignments });
+            });
+        });
     }
 };
 

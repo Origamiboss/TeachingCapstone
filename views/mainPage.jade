@@ -182,5 +182,50 @@ block content
                 });
         }
         function selectClass(className) {
+            
             //tell the server to select this class
+            //gather the assignmnets for the class and display them
+            event.preventDefault();
+
+            fetch('/mainPage/findAssignments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ className })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        // Handle error
+                        console.log(data.error);
+                    } else {
+                        // Successful response
+                        const assignments = data.assignments;
+                        var container = document.getElementById("assignmentHolder");
+                        container.innerHTML = '';
+
+                        if (assignments.length === 0) {
+                            // Handle case where no classes are returned
+                            let noAssignmentsMessage = document.createElement('p');
+                            noAssignmentsMessage.innerHTML = 'No assignments found';
+                            container.appendChild(noAssignmentsMessage);
+                        } else {
+                            // Create buttons for each class
+                            for (let i = 0; i < assignments.length; i++) {
+                                let button = document.createElement('button');
+                                button.innerHTML = assignments[i].name + " " + assignments[i].dueDate;
+                                button.onclick = function () {
+                                    //go to assignment
+                                };
+                                container.appendChild(button);
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    // Handle fetch error
+                    console.log(error);
+                });
+                togglePopup('changeClass');
         }

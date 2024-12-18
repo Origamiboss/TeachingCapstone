@@ -85,7 +85,9 @@ body {
 .assignment {
     text-align: right;
 }
-
+.assignment button {
+    text-align: right;
+}
 .class {
     text-align: left;
 }
