@@ -82,7 +82,7 @@ router.post('/findAssignments', async (req, res) => {
     const { className } = req.body;
 
     try {
-        const result = await dbUtils.findAssignments(className);  // `await` is used here
+        const result = await dbUtils.findAssignments(className, req.session.username);  // `await` is used here
 
         if (result && result.assignments) {  // Fix variable name
             return res.json({ status: 'success', assignments: result.assignments });  // Use `result.assignments`
@@ -95,5 +95,14 @@ router.post('/findAssignments', async (req, res) => {
     }
 });
 
+//load the assignment Id to the session
+router.post('/goToAssignment', async (req, res) => {
+    const { assignId, assignName } = req.body;
+
+    req.session.assignId = assignId;
+    req.session.assignName = assignName;
+
+    return res.json({ status: 'success', id: assignId });
+});
 
 module.exports = router;

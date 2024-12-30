@@ -1,0 +1,51 @@
+.submit {
+    background-color: limegreen;
+    color: gray;
+}
+
+.title {
+    background-color: #4CAF50;
+    color: white;
+    text-align: center;
+    padding: 50px;
+}
+
+    .title h1 {
+        margin: 0;
+        font-size: 3em;
+    }
+
+.question {
+    display: flex;
+    flex-direction: column; /* Make sure the question and buttons stack vertically */
+    padding: 10px;
+    margin: 20px 0;
+}
+
+    .question p {
+        width: 100%; /* Make the paragraph take up the full width */
+        padding: 10px;
+        font-size: 32px;
+        background-color: darkseagreen;
+        color: black;
+        margin: 0; /* Remove any margin */
+    }
+
+    .question button {
+        font-size: 24px;
+        background-color: lightgrey;
+        color: black;
+        border: none;
+        padding: 10px;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+
+        .question button:hover {
+            background-color: #90EE90;
+        }
+.selected {
+    background-color: limegreen !important; /* Forces the background color to always be limegreen */
+    color: white !important; /* Forces the text color to always be white */
+    border: 2px solid darkgreen !important; /* Ensures the border is always applied */
+}

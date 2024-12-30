@@ -13,6 +13,7 @@ var frontPageRouter = require('./routes/frontPage');
 var loginRouter = require('./routes/login');
 var signUpRouter = require('./routes/signUp');
 var mainPageRouter = require('./routes/mainPage');
+var assignmentViewerRouter = require('./routes/assignmentView');
 
 var app = express();
 
@@ -43,6 +44,7 @@ app.use('/frontPage', frontPageRouter);  // This may not be needed if same as '/
 app.use('/login', loginRouter);  // Handles login page and login POST
 app.use('/signUp', signUpRouter);
 app.use('/mainPage', mainPageRouter);
+app.use('/assignmentView', assignmentViewerRouter);
 
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {

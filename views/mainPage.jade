@@ -8,7 +8,13 @@ block toolbar
     button(onclick="findClass()") Change Class
     button(onclick="logOut()") Sign Out
 block content
-    div(id="assignmentHolder" class="assignments")
+    div(class="assignments")
+        div
+            h3 Assignments:
+            //check if teacher
+            if(role == 'teacher')
+                button(onclick="createAssignment()") Add Assignment
+        div(id="assignmentHolder")
     div(id="changeClassOverlay" class="overlay-container")
         div(class="popup-box")
             h2(style="color: green;">Popup Form)
@@ -211,14 +217,47 @@ block content
                             noAssignmentsMessage.innerHTML = 'No assignments found';
                             container.appendChild(noAssignmentsMessage);
                         } else {
-                            // Create buttons for each class
+                            // Create buttons for each assignment
                             for (let i = 0; i < assignments.length; i++) {
                                 let button = document.createElement('button');
-                                button.innerHTML = assignments[i].name + " " + assignments[i].dueDate;
+                                if(role == 'student'){
+                                    button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate + " Grade: " + assignments[i].grade;
+                                }
+                                if(role == 'teacher'){
+                                    button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate + " Grade: ";
+                                }
                                 button.onclick = function () {
-                                    //go to assignment
-                                };
-                                container.appendChild(button);
+                                    if(role == 'student'){
+                                        // Go to assignment with the assignment id
+                                        fetch('/mainPage/goToAssignment', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({ assignId: assignments[i].id, assignName: assignments[i].name }) // Send the assignmentId, not the entire object
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.error) {
+                                                // Handle error
+                                                console.log(data.error);
+                                            } else {
+                                                // Redirect to the assignment view page
+                                                window.location.href = '/assignmentView';
+                                            }
+                                        })
+                                        .catch(error => {
+                                            // Handle fetch error
+                                            console.log(error);
+                                        });
+                                    };
+
+                                    // Append the button to the container
+                                    container.appendChild(button);
+                                }
+                                else if(role == 'teacher'){
+
+                                }
                             }
                         }
                     }
@@ -228,4 +267,8 @@ block content
                     console.log(error);
                 });
                 togglePopup('changeClass');
+        }
+        function createAssignment(){
+            //create assignment
+
         }
