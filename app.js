@@ -14,6 +14,7 @@ var loginRouter = require('./routes/login');
 var signUpRouter = require('./routes/signUp');
 var mainPageRouter = require('./routes/mainPage');
 var assignmentViewerRouter = require('./routes/assignmentView');
+var assignmentEditorRouter = require('./routes/assignmentEditor');
 
 var app = express();
 
@@ -45,6 +46,7 @@ app.use('/login', loginRouter);  // Handles login page and login POST
 app.use('/signUp', signUpRouter);
 app.use('/mainPage', mainPageRouter);
 app.use('/assignmentView', assignmentViewerRouter);
+app.use('/assignmentEditor', assignmentEditorRouter);
 
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {

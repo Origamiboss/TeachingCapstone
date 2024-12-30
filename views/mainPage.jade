@@ -249,6 +249,24 @@ block content
                                 // Teacher-specific logic can be handled here
                                 else if (role == 'teacher') {
                                     // Handle teacher-specific logic if needed
+                                    fetch('/mainPage/goToAssignment', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ assignId: assignments[i].id, assignName: assignments[i].name })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.error) {
+                                            console.log(data.error);
+                                        } else {
+                                            window.location.href = '/assignmentEditor';
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.log(error);
+                                    });
                                 }
                             };
 

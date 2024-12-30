@@ -6,3 +6,21 @@ var dbUtils = require('../utils/dbUtils'); // Use relative path to your dbUtils
 router.get('/', function (req, res, next) {
     res.render('assignmentEditor', { title: 'Assignment Editor', assignmentId: req.session.assignId, assignmentName: req.session.assignName });
 });
+
+router.post('/getQuestions', async function (req, res, next) {
+    try {
+        const assignId = req.session.assignId;
+
+        // Wait for the result of findQuestions using await
+        const { questions, answers } = await dbUtils.findQuestions(assignId);
+
+        // Send the result back to the client
+        return res.json({ status: 'success', questions, answers });
+    } catch (err) {
+        // If an error occurs, send an error response
+        console.error(err);
+        return res.json({ status: 'error', message: err });
+    }
+});
+
+module.exports = router;

@@ -1,0 +1,103 @@
+extends layout.jade
+
+block toolbar
+    a(href='/mainPage') Back
+
+block content
+    h1(id='assignmentTitle' class='title') #{assignmentName}
+    div(id='questionHolder')
+    div
+        button(onclick="generateQuestion(1, 'Sample Question', [])") Add Question
+    div(id='bottomForm')
+        button(id='saveButton' onclick='saveForm()' class='submit') Submit
+    script.
+        window.onload = function() {
+            var container = document.getElementById('questionHolder');
+            
+
+            fetch('/assignmentEditor/getQuestions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    // Handle error
+                    let errorText = document.createElement('p');
+                    errorText.innerHTML = data.error;
+                    container.appendChild(errorText);
+                } else {
+                    var questions = data.questions;
+                    var answers = data.answers;
+                    console.log(questions);
+                    console.log(answers);
+
+                    // Generate questions and answers dynamically
+                    for (let i = 0; i < questions.length; i++) {
+                        generateQuestion(questions[i].num, questions[i].prompt, answers.filter(a => a.num === questions[i].num));
+                    }
+                }
+            })
+            .catch(error => {
+                // Handle fetch error
+                let errorText = document.createElement('p');
+                errorText.innerHTML = error;
+                container.appendChild(errorText);
+            });
+
+            console.log("Everything is loaded!");
+        };
+        // Generate questions and answers dynamically
+        function generateQuestion(questionNum, prompt, answers) {
+            var container = document.getElementById('questionHolder');
+
+            // Create question element
+            var questionElement = document.createElement('div');
+            questionElement.classList.add('question');
+
+            var questionNumPrompt = document.createElement('input');
+            questionNumPrompt.type = 'number';
+            questionNumPrompt.value = questionNum;
+            var questionPrompt = document.createElement('input');
+            questionPrompt.type = 'text';
+            questionPrompt.value = prompt;
+
+            questionElement.appendChild(questionNumPrompt);
+            questionElement.appendChild(questionPrompt);
+
+            // Create answers for the question
+            var answersList = document.createElement('div');
+            answers.forEach(answer => {
+                generateAnswer(answersList, answer.prompt);
+            });
+            var addAnswer = document.createElement('button');
+            addAnswer.innerHTML = "Add Answer";
+            addAnswer.addEventListener('click', function(){
+                generateAnswer(answersList, "Type Answer");
+            });
+
+            //remove question
+            questionElement.appendChild(answersList);
+            questionElement.appendChild(addAnswer);
+            container.appendChild(questionElement);
+        }
+        function generateAnswer(answersList, text){
+            var answerHolder = document.createElement('div');
+            var answerItem = document.createElement('input');
+            answerItem.type = "text";
+            answerItem.value = text;  // Assuming answer has a prompt field
+        
+            var removeAnswer = document.createElement('button');
+            removeAnswer.innerHTML = "-";
+            //remove answer
+            removeAnswer.addEventListener('click', function(){
+                answersList.removeChild(answerHolder);
+            });
+
+            answerHolder.appendChild(removeAnswer);
+            answerHolder.appendChild(answerItem);
+
+            answersList.appendChild(answerHolder);
+        }
