@@ -22,7 +22,7 @@ block content
                 label(class="form-label" for="name") Select Your Class
                 div(id="classHolder" class="holder-popup")
 
-            button(class="btn-close-popup" onclick="togglePopup('changeClass')") Close
+            button(class="btn-close-popup" onclick="togglePopupChange()") Close
     //teacher form   
     div(id="createClassOverlay" class="overlay-container")
         div(class="popup-box")
@@ -34,7 +34,7 @@ block content
                 input(id="classNameInput" type="text")
                 p(id="errorText" class="error")
             button(class="btn-submit" onclick="createClass()") Submit
-            button(class="btn-close-popup" onclick="togglePopup('teacher')") Close
+            button(class="btn-close-popup" onclick="togglePopup()") Close
     //student form
     div(id="addClassOverlay" class="overlay-container")
         div(class="popup-box")
@@ -44,9 +44,12 @@ block content
                 input(id="classIdInput" type="text")
                 p(class="error" id="errorText")
             button(class="btn-submit" onclick="addClass()") Submit
-            button(class="btn-close-popup" onclick="togglePopup('student')") Close
+            button(class="btn-close-popup" onclick="togglePopup()") Close
 
     script.
+        //set up the role
+        var role = `#{role}`;
+        console.log(role);
         function logOut() {
             fetch('/mainPage/logout', {
                 method: 'POST',
@@ -114,18 +117,18 @@ block content
                     container.appendChild(errorText);
                 });
         }
-        function togglePopup(role){
+        function togglePopup(){
             if(role == 'student'){
                 var popup = document.getElementById("addClassOverlay");
                 popup.classList.toggle("show");
             }else if(role == 'teacher'){
                 var popup = document.getElementById("createClassOverlay");
                 popup.classList.toggle("show");
-            }else if(role == 'changeClass'){
-                var popup = document.getElementById("changeClassOverlay");
-                popup.classList.toggle("show");
             }
-            
+        }
+        function togglePopupChange(){
+            var popup = document.getElementById("changeClassOverlay");
+            popup.classList.toggle("show");
         }
         function createClass() {
             //create a class with the information in classIdInput and classNameInput
@@ -188,9 +191,6 @@ block content
                 });
         }
         function selectClass(className) {
-            
-            //tell the server to select this class
-            //gather the assignmnets for the class and display them
             event.preventDefault();
 
             fetch('/mainPage/findAssignments', {
@@ -200,74 +200,70 @@ block content
                 },
                 body: JSON.stringify({ className })
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        // Handle error
-                        console.log(data.error);
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    // Handle error
+                    console.log(data.error);
+                } else {
+                    // Successful response
+                    const assignments = data.assignments;
+                    var container = document.getElementById("assignmentHolder");
+                    container.innerHTML = '';
+
+                    if (assignments.length === 0) {
+                        let noAssignmentsMessage = document.createElement('p');
+                        noAssignmentsMessage.innerHTML = 'No assignments found';
+                        container.appendChild(noAssignmentsMessage);
                     } else {
-                        // Successful response
-                        const assignments = data.assignments;
-                        var container = document.getElementById("assignmentHolder");
-                        container.innerHTML = '';
-
-                        if (assignments.length === 0) {
-                            // Handle case where no classes are returned
-                            let noAssignmentsMessage = document.createElement('p');
-                            noAssignmentsMessage.innerHTML = 'No assignments found';
-                            container.appendChild(noAssignmentsMessage);
-                        } else {
-                            // Create buttons for each assignment
-                            for (let i = 0; i < assignments.length; i++) {
-                                let button = document.createElement('button');
-                                if(role == 'student'){
-                                    button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate + " Grade: " + assignments[i].grade;
-                                }
-                                if(role == 'teacher'){
-                                    button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate + " Grade: ";
-                                }
-                                button.onclick = function () {
-                                    if(role == 'student'){
-                                        // Go to assignment with the assignment id
-                                        fetch('/mainPage/goToAssignment', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                            },
-                                            body: JSON.stringify({ assignId: assignments[i].id, assignName: assignments[i].name }) // Send the assignmentId, not the entire object
-                                        })
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            if (data.error) {
-                                                // Handle error
-                                                console.log(data.error);
-                                            } else {
-                                                // Redirect to the assignment view page
-                                                window.location.href = '/assignmentView';
-                                            }
-                                        })
-                                        .catch(error => {
-                                            // Handle fetch error
-                                            console.log(error);
-                                        });
-                                    };
-
-                                    // Append the button to the container
-                                    container.appendChild(button);
-                                }
-                                else if(role == 'teacher'){
-
-                                }
+                        for (let i = 0; i < assignments.length; i++) {
+                            let button = document.createElement('button');
+                            if (role == 'student') {
+                                button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate + " Grade: " + assignments[i].grade;
+                            } else if (role == 'teacher') {
+                                button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate + " Grade: ";
                             }
+
+                            button.onclick = function () {
+                                if (role == 'student') {
+                                    fetch('/mainPage/goToAssignment', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ assignId: assignments[i].id, assignName: assignments[i].name })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.error) {
+                                            console.log(data.error);
+                                        } else {
+                                            window.location.href = '/assignmentView';
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.log(error);
+                                    });
+                                }
+
+                                // Teacher-specific logic can be handled here
+                                else if (role == 'teacher') {
+                                    // Handle teacher-specific logic if needed
+                                }
+                            };
+
+                            container.appendChild(button);
                         }
                     }
-                })
-                .catch(error => {
-                    // Handle fetch error
-                    console.log(error);
-                });
-                togglePopup('changeClass');
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            });
+
+            togglePopupChange();
         }
+
         function createAssignment(){
             //create assignment
 
