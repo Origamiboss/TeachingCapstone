@@ -36,7 +36,7 @@ block content
 
                     // Generate questions and answers dynamically
                     for (let i = 0; i < questions.length; i++) {
-                        generateQuestion(questions[i].num, questions[i].prompt, answers.filter(a => a.num === questions[i].num));
+                        generateQuestion(questions[i].num, questions[i], answers.filter(a => a.num === questions[i].num));
                     }
                 }
             })
@@ -50,7 +50,7 @@ block content
             console.log("Everything is loaded!");
         };
         // Generate questions and answers dynamically
-        function generateQuestion(questionNum, prompt, answers) {
+        function generateQuestion(questionNum, question, answers) {
             var container = document.getElementById('questionHolder');
 
             // Create question element
@@ -62,7 +62,7 @@ block content
             questionNumPrompt.value = questionNum;
             var questionPrompt = document.createElement('input');
             questionPrompt.type = 'text';
-            questionPrompt.value = prompt;
+            questionPrompt.value = question.prompt;
 
             questionElement.appendChild(questionNumPrompt);
             questionElement.appendChild(questionPrompt);
@@ -70,7 +70,14 @@ block content
             // Create answers for the question
             var answersList = document.createElement('div');
             answers.forEach(answer => {
-                generateAnswer(answersList, answer.prompt);
+                var correct = false;
+                
+                if(question.correctAnswer === answer.prompt){
+                    correct = true;
+                }else{
+                    correct = false;
+                }
+                generateAnswer(answersList, answer.prompt, correct);
             });
             var addAnswer = document.createElement('button');
             addAnswer.innerHTML = "Add Answer";
@@ -83,7 +90,7 @@ block content
             questionElement.appendChild(addAnswer);
             container.appendChild(questionElement);
         }
-        function generateAnswer(answersList, text){
+        function generateAnswer(answersList, text, correct){
             var answerHolder = document.createElement('div');
             var answerItem = document.createElement('input');
             answerItem.type = "text";
@@ -95,9 +102,17 @@ block content
             removeAnswer.addEventListener('click', function(){
                 answersList.removeChild(answerHolder);
             });
+            //add the answer
+            var correctAnswerBox = document.createElement('input');
+            correctAnswerBox.type = "checkbox";
+            correctAnswerBox.checked = correct;
 
             answerHolder.appendChild(removeAnswer);
             answerHolder.appendChild(answerItem);
+            answerHolder.appendChild(correctAnswerBox);
 
             answersList.appendChild(answerHolder);
+        }
+        function submitQuestions(){
+
         }
