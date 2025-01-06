@@ -22,5 +22,19 @@ router.post('/getQuestions', async function (req, res, next) {
         return res.json({ status: 'error', message: err });
     }
 });
+router.post('/submitQuestions', async function (req, res, next) {
+    try {
+        const questions = req.body.questions;
+
+        const assignId = req.session.assignId;
+        //send the message to dbUtils
+        await dbUtils.submitQuestions(questions, assignId);
+
+        return res.json({ status: 'success', questions});
+    } catch (err) {
+        console.error(err);
+        return res.json({ status: 'error', message: err });
+    }
+});
 
 module.exports = router;

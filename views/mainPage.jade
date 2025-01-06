@@ -13,7 +13,7 @@ block content
             h3 Assignments:
             //check if teacher
             if(role == 'teacher')
-                button(onclick="createAssignment()") Add Assignment
+                button(onclick="toggleAddClass()") Add Assignment
         div(id="assignmentHolder")
     div(id="changeClassOverlay" class="overlay-container")
         div(class="popup-box")
@@ -46,9 +46,22 @@ block content
             button(class="btn-submit" onclick="addClass()") Submit
             button(class="btn-close-popup" onclick="togglePopup()") Close
 
+    //add class Overlay
+    div(id="CreateAssignmentOverlay" class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;") Popup Form
+            form(class="form-container")
+                label(class="form-label" for="name") Type in your Assignment Name
+                input(id="assignmentName" type="text")
+                label(class="form-label" for="name") Type in your Assignment Id
+                input(id="assignmentId" type="text")
+                p(class="error" id="errorText")
+            button(class="btn-submit" onclick="createAssignment()") Create
+            button(class="btn-close-popup" onclick="toggleAddClass()") Close
     script.
         //set up the role
         var role = `#{role}`;
+        var globalClassName = "Null";
         console.log(role);
         function logOut() {
             fetch('/mainPage/logout', {
@@ -192,7 +205,7 @@ block content
         }
         function selectClass(className) {
             event.preventDefault();
-
+            globalClassName = className;
             fetch('/mainPage/findAssignments', {
                 method: 'POST',
                 headers: {
@@ -281,8 +294,31 @@ block content
 
             togglePopupChange();
         }
-
+        function toggleAddClass(){
+            var popup = document.getElementById("CreateAssignmentOverlay");
+            popup.classList.toggle("show");
+        }
         function createAssignment(){
+            //get the assignment name and Id
+            const assignId = document.getElementById("assignmentId").value;
+            const assignName = document.getElementById("assignmentName").value;
             //create assignment
-
+            fetch('/mainPage/makeAssignment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({className: globalClassName, assignId: assignId, assignName: assignName})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.log(data.error);
+                } else {
+                    window.location.href = '/assignmentEditor';
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            });
         }

@@ -104,5 +104,16 @@ router.post('/goToAssignment', async (req, res) => {
 
     return res.json({ status: 'success', id: assignId });
 });
+//make an assignment and then go there
+router.post('/makeAssignment', async (req, res) => {
+    const { className, assignId, assignName } = req.body;
+
+    await dbUtils.makeAssignment(className, assignId, assignName);
+
+    req.session.assignId = assignId;
+    req.session.assignName = assignName;
+
+    return res.json({ status: 'success', id: assignId });
+});
 
 module.exports = router;

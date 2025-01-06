@@ -9,7 +9,7 @@ block content
     div
         button(onclick="generateQuestion(1, 'Sample Question', [])") Add Question
     div(id='bottomForm')
-        button(id='saveButton' onclick='saveForm()' class='submit') Submit
+        button(id='saveButton' onclick='submitQuestions()' class='submit') Submit
     script.
         window.onload = function() {
             var container = document.getElementById('questionHolder');
@@ -25,9 +25,7 @@ block content
             .then(data => {
                 if (data.error) {
                     // Handle error
-                    let errorText = document.createElement('p');
-                    errorText.innerHTML = data.error;
-                    container.appendChild(errorText);
+                    alert(data.error);
                 } else {
                     var questions = data.questions;
                     var answers = data.answers;
@@ -42,9 +40,7 @@ block content
             })
             .catch(error => {
                 // Handle fetch error
-                let errorText = document.createElement('p');
-                errorText.innerHTML = error;
-                container.appendChild(errorText);
+                alert(error);
             });
 
             console.log("Everything is loaded!");
@@ -59,10 +55,13 @@ block content
 
             var questionNumPrompt = document.createElement('input');
             questionNumPrompt.type = 'number';
+            questionNumPrompt.classList.add('questionNumPrompt');
             questionNumPrompt.value = questionNum;
+
             var questionPrompt = document.createElement('input');
             questionPrompt.type = 'text';
             questionPrompt.value = question.prompt;
+            questionPrompt.classList.add('questionPrompt');
 
             questionElement.appendChild(questionNumPrompt);
             questionElement.appendChild(questionPrompt);
@@ -95,7 +94,8 @@ block content
             var answerItem = document.createElement('input');
             answerItem.type = "text";
             answerItem.value = text;  // Assuming answer has a prompt field
-        
+            answerItem.classList.add('answerPrompt');
+
             var removeAnswer = document.createElement('button');
             removeAnswer.innerHTML = "-";
             //remove answer
@@ -106,6 +106,7 @@ block content
             var correctAnswerBox = document.createElement('input');
             correctAnswerBox.type = "checkbox";
             correctAnswerBox.checked = correct;
+            correctAnswerBox.classList.add('correctBox');
 
             answerHolder.appendChild(removeAnswer);
             answerHolder.appendChild(answerItem);
@@ -113,6 +114,76 @@ block content
 
             answersList.appendChild(answerHolder);
         }
-        function submitQuestions(){
+        function submitQuestions() {
+            // Select all question containers
+            var questionContainers = document.querySelectorAll('.question');
+            let questions = [];
+    
+            // Loop through each question container
+            questionContainers.forEach(function(questionContainer) {
+                // Get the value of the number input (e.g., question number)
+                var questionNum = questionContainer.querySelector('.questionNumPrompt').value;
+        
+                // Get the value of the text input (e.g., question prompt)
+                var questionPrompt = questionContainer.querySelector('.questionPrompt').value;
 
+                // Ensure the question number and prompt are not empty before proceeding
+                if (!questionNum || !questionPrompt) {
+                    alert('Please fill out both the question number and prompt.');
+                    return; // Stop the function if invalid data is found
+                }
+
+                // Get all the answer sections (the divs containing the answer inputs)
+                var answerDivs = questionContainer.querySelectorAll('.question > div > div');  // Select each answer section
+
+                // Loop through the answer sections and get the values of the inputs
+                var answers = Array.from(answerDivs).map(function(div) {
+                    var answerText = div.querySelector('.answerPrompt').value;  // Answer text
+                    var isCorrect = div.querySelector('.correctBox').checked;  // Whether this answer is correct
+
+                    // Skip answers that don't have text
+                    if (!answerText) {
+                        return null; // We can filter out null answers later
+                    }
+
+                    return { answerText, isCorrect };  // Return an object containing the answer text and correctness
+                }).filter(answer => answer !== null); // Filter out null answers
+
+                // Only add the question to the array if it has valid answers
+                if (answers.length > 0) {
+                    questions.push({ questionNum, questionPrompt, answers });
+                } else {
+                    alert('Please provide at least one answer for each question.');
+                    return; // Stop the function if no valid answers are found
+                }
+            });
+
+            // Ensure there are questions to send
+            if (questions.length === 0) {
+                alert('No valid questions to submit.');
+                return;
+            }
+
+            // Send questions to the server
+            fetch('/assignmentEditor/submitQuestions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ questions })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    // Handle error
+                    alert(data.error);
+                } else {
+                    // Success
+                    window.location.href = '/mainPage'; // Redirect on success
+                }
+            })
+            .catch(error => {
+                // Handle fetch error
+                alert('An error occurred: ' + error);
+            });
         }
