@@ -13,7 +13,7 @@ block content
             h3 Assignments:
             //check if teacher
             if(role == 'teacher')
-                button(onclick="toggleAddClass()") Add Assignment
+                button(onclick="toggleCreateAssignment()") Add Assignment
         div(id="assignmentHolder")
     div(id="changeClassOverlay" class="overlay-container")
         div(class="popup-box")
@@ -46,7 +46,7 @@ block content
             button(class="btn-submit" onclick="addClass()") Submit
             button(class="btn-close-popup" onclick="togglePopup()") Close
 
-    //add class Overlay
+    //create Assigment Overlay
     div(id="CreateAssignmentOverlay" class="overlay-container")
         div(class="popup-box")
             h2(style="color: green;") Popup Form
@@ -55,13 +55,15 @@ block content
                 input(id="assignmentName" type="text")
                 label(class="form-label" for="name") Type in your Assignment Id
                 input(id="assignmentId" type="text")
+                label(class="form-label" for="name") Due Date
+                input(id="assignmentDueDate" type="date")
                 p(class="error" id="errorText")
-            button(class="btn-submit" onclick="createAssignment()") Create
-            button(class="btn-close-popup" onclick="toggleAddClass()") Close
+            button(class="btn-submit" id="createAssignmentButton") Create
+            button(class="btn-close-popup" onclick="toggleCreateAssignment()") Close
     script.
         //set up the role
         var role = `#{role}`;
-        var globalClassName = "Null";
+        var globalClassName = null;
         console.log(role);
         function logOut() {
             fetch('/mainPage/logout', {
@@ -116,7 +118,7 @@ block content
                                 let button = document.createElement('button');
                                 button.innerHTML = classNames[i];
                                 button.onclick = function () {
-                                    selectClass(classNames[i]);
+                                    selectClass(classNames[i], true);
                                 };
                                 container.appendChild(button);
                             }
@@ -203,8 +205,10 @@ block content
                     errorText.innerHTML = error;
                 });
         }
-        function selectClass(className) {
-            event.preventDefault();
+        function selectClass(className, preventDefault = false) {
+            if(preventDefault){
+                event.preventDefault();
+            }
             globalClassName = className;
             fetch('/mainPage/findAssignments', {
                 method: 'POST',
@@ -233,8 +237,18 @@ block content
                             let button = document.createElement('button');
                             if (role == 'student') {
                                 button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate + " Grade: " + assignments[i].grade;
+                                container.appendChild(button);
                             } else if (role == 'teacher') {
                                 button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate + " Grade: ";
+                                container.appendChild(button);
+
+                                //make the edit assignment button
+                                let editButton = document.createElement('button');
+                                editButton.innerHTML = "Edit";
+                                container.appendChild(editButton);
+                                editButton.onclick = function(){
+                                    toggleCreateAssignment(assignments[i].id, assignments[i].name, assignments[i].dueDate);
+                                }
                             }
 
                             button.onclick = function () {
@@ -283,8 +297,9 @@ block content
                                 }
                             };
 
-                            container.appendChild(button);
                         }
+                        
+
                     }
                 }
             })
@@ -294,21 +309,50 @@ block content
 
             togglePopupChange();
         }
-        function toggleAddClass(){
-            var popup = document.getElementById("CreateAssignmentOverlay");
-            popup.classList.toggle("show");
+        function toggleCreateAssignment(assignId, assignName, assignDate){
+            //no assignment passed
+            if(assignId == null){
+                var popup = document.getElementById("CreateAssignmentOverlay");
+                popup.classList.toggle("show");
+
+                //reset the values
+                document.getElementById("assignmentId").value = null;
+                document.getElementById("assignmentName").value = null;
+                document.getElementById("assignmentDueDate").value = null;
+
+                document.getElementById("createAssignmentButton").onclick = function() {
+                    assignId = document.getElementById("assignmentId").value;
+                    assignName = document.getElementById("assignmentName").value;
+                    assignDate = document.getElementById("assignmentDueDate").value;
+                    createAssignment(assignId, assignName, assignDate); // Call createAssignment when the button is clicked
+                };
+            }else{
+                //assignment passed
+                //toggle the create assignment
+                var popup = document.getElementById("CreateAssignmentOverlay");
+                popup.classList.toggle("show");
+                //fill the information of the assignment
+                document.getElementById("assignmentId").value = assignId;
+                document.getElementById("assignmentName").value = assignName;
+                document.getElementById("assignmentDueDate").value = assignDate;
+
+                document.getElementById("createAssignmentButton").onclick = function() {
+                    assignId = document.getElementById("assignmentId").value;
+                    assignName = document.getElementById("assignmentName").value;
+                    assignDate = document.getElementById("assignmentDueDate").value;
+                    editAssignment(assignId, assignName, assignDate); // Call editAssignment with the correct data
+                };
+            }
         }
-        function createAssignment(){
-            //get the assignment name and Id
-            const assignId = document.getElementById("assignmentId").value;
-            const assignName = document.getElementById("assignmentName").value;
+        function createAssignment(assignId, assignName, dueDate){
+            console.log("Create assignment");
             //create assignment
             fetch('/mainPage/makeAssignment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({className: globalClassName, assignId: assignId, assignName: assignName})
+                body: JSON.stringify({className: globalClassName, assignId: assignId, assignName: assignName, dueDate: dueDate})
             })
             .then(response => response.json())
             .then(data => {
@@ -321,4 +365,29 @@ block content
             .catch(error => {
                 console.log(error);
             });
+        }
+        function editAssignment(assignId, assignName, dueDate){
+            //edit assignment
+            fetch('/mainPage/editAssignment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({className: globalClassName, assignId: assignId, assignName: assignName, dueDate: dueDate})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.log(data.error);
+                } else {
+                    //update the class view
+                    selectClass(globalClassName);
+                    //close the panel
+                    toggleCreateAssignment();
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            });
+
         }

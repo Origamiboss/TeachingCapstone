@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 // Create a MySQL connection
 const con = mysql.createConnection({
-    host: '192.168.68.50',
+    host: '192.168.68.60',
     user: 'capstoneUser',
     password: 'Zv935YOiwUVv',
     database: 'capstone'
@@ -344,11 +344,11 @@ const dbUtils = {
             throw error; // Optionally, rethrow or handle the error as needed
         }
     },
-    makeAssignment: async (className, assignId, assignName) => {
+    makeAssignment: async (className, assignId, assignName, dueDate) => {
         //create a new assignment with these specifications
         return new Promise((resolve, reject) => {
             const sql = `INSERT INTO assignment (name, id, dueDate, className) VALUES (?, ?, ?, ?)`;
-            con.query(sql, [assignName, assignId, null,className], (err, result) => {
+            con.query(sql, [assignName, assignId, dueDate,className], (err, result) => {
                 if (err) {
                     if (err.code === 'ER_DUP_ENTRY') {
                         return reject('Assignment already exists');
@@ -361,9 +361,26 @@ const dbUtils = {
                 return resolve({ status: 'success', message: 'Assignment added successfully!' });
             });
         });
+    },
+    editAssignment: async (className, assignId, assignName, dueDate) => {
+        //create a new assignment with these specifications
+        return new Promise((resolve, reject) => {
+            const sql = `UPDATE assignment SET name = ?, dueDate = ? WHERE id = ? AND className = ?`;
+            con.query(sql, [assignName, dueDate, assignId, className], (err, result) => {
+                if (err) {
+                    if (err.code === 'ER_DUP_ENTRY') {
+                        return reject('Assignment already exists');
+                    } else {
+                        console.error("Error saving to database:", err);
+                        return reject('Error saving to database');
+                    }
+                }
+
+                return resolve({ status: 'success', message: 'Assignment updated successfully!' });
+            });
+        });
+
     }
-
-
 };
 
 module.exports = dbUtils;

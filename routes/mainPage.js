@@ -106,9 +106,19 @@ router.post('/goToAssignment', async (req, res) => {
 });
 //make an assignment and then go there
 router.post('/makeAssignment', async (req, res) => {
-    const { className, assignId, assignName } = req.body;
+    const { className, assignId, assignName, dueDate } = req.body;
 
-    await dbUtils.makeAssignment(className, assignId, assignName);
+    await dbUtils.makeAssignment(className, assignId, assignName, dueDate);
+
+    req.session.assignId = assignId;
+    req.session.assignName = assignName;
+
+    return res.json({ status: 'success', id: assignId });
+});
+router.post('/editAssignment', async (req, res) => {
+    const { className, assignId, assignName, dueDate } = req.body;
+
+    await dbUtils.editAssignment(className, assignId, assignName, dueDate);
 
     req.session.assignId = assignId;
     req.session.assignName = assignName;
