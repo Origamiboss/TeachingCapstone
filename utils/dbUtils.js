@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 // Create a MySQL connection
 const con = mysql.createConnection({
-    host: '192.168.1.153',
+    host: '192.168.68.56',
     user: 'capstoneUser',
     password: 'Zv935YOiwUVv',
     database: 'capstone'
@@ -283,6 +283,139 @@ const dbUtils = {
             console.error("Error submitting answers:", err);
             return { status: 'error', message: 'Error submitting answers' };  // Send a meaningful response
         }
+    },
+    submitQuestions: async(questions, assignId) => {
+        // Start a transaction
+        await con.promise().query('START TRANSACTION');
+
+        try {
+            // Loop through each question
+            for (const question of questions) {
+                const questionNum = question.questionNum;
+                const questionPrompt = question.questionPrompt;
+
+                // Check if the question already exists in the database
+                const questionCheck = 'SELECT prompt FROM question WHERE assignId = ? AND num = ?';
+                const [results] = await con.promise().query(questionCheck, [assignId, questionNum]);
+
+                if (results.length > 0) {
+                    console.log(`Question ${questionNum} exists. Deleting associated answers and question.`);
+
+                    // Delete the answers first
+                    const deleteAnswerSQL = 'DELETE FROM answer WHERE assignId = ? AND num = ?';
+                    const [deleteAnswerResult] = await con.promise().query(deleteAnswerSQL, [assignId, questionNum]);
+                    console.log('Deleted answers:', deleteAnswerResult);
+
+                    // Delete the question itself
+                    const deleteQuestionSQL = 'DELETE FROM question WHERE assignId = ? AND num = ?';
+                    const [deleteQuestionResult] = await con.promise().query(deleteQuestionSQL, [assignId, questionNum]);
+                    console.log('Deleted question:', deleteQuestionResult);
+                }
+
+                // Find the correct answer
+                const correctAnswer = question.answers.find(answer => answer.isCorrect === true)?.answerText;
+
+                // Insert the new question with the correct answer
+                const questionSQL = 'INSERT INTO question (num, prompt, assignId, correctAnswer) VALUES (?,?,?,?)';
+                await con.promise().query(questionSQL, [questionNum, questionPrompt, assignId, correctAnswer]);
+
+                // Insert the answers into the database
+                for (const answer of question.answers) {
+                    // Check if the answer already exists to avoid duplicate entry
+                    const answerCheckSQL = 'SELECT * FROM answer WHERE num = ? AND prompt = ? AND assignId = ?';
+                    const [existingAnswer] = await con.promise().query(answerCheckSQL, [questionNum, answer.answerText, assignId]);
+
+                    if (existingAnswer.length === 0) {
+                        // If the answer doesn't exist, insert it
+                        const answerSQL = 'INSERT INTO answer (num, prompt, assignId) VALUES (?,?,?)';
+                        await con.promise().query(answerSQL, [questionNum, answer.answerText, assignId]);
+                    } else {
+                        console.log(`Answer for question ${questionNum} already exists. Skipping insert.`);
+                    }
+                }
+            }
+
+            // Commit the transaction after all queries are successful
+            await con.promise().query('COMMIT');
+        } catch (error) {
+            // If any error occurs, rollback the transaction
+            await con.promise().query('ROLLBACK');
+            console.error('Error occurred while submitting answers:', error);
+            throw error; // Optionally, rethrow or handle the error as needed
+        }
+    },
+    makeAssignment: async (className, assignId, assignName, dueDate) => {
+        //create a new assignment with these specifications
+        return new Promise((resolve, reject) => {
+            const sql = `INSERT INTO assignment (name, id, dueDate, className) VALUES (?, ?, ?, ?)`;
+            con.query(sql, [assignName, assignId, dueDate,className], (err, result) => {
+                if (err) {
+                    if (err.code === 'ER_DUP_ENTRY') {
+                        return reject('Assignment already exists');
+                    } else {
+                        console.error("Error saving to database:", err);
+                        return reject('Error saving to database');
+                    }
+                }
+
+                return resolve({ status: 'success', message: 'Assignment added successfully!' });
+            });
+        });
+    },
+    editAssignment: async (className, assignId, assignName, dueDate) => {
+        //create a new assignment with these specifications
+        return new Promise((resolve, reject) => {
+            const sql = `UPDATE assignment SET name = ?, dueDate = ? WHERE id = ? AND className = ?`;
+            con.query(sql, [assignName, dueDate, assignId, className], (err, result) => {
+                if (err) {
+                    if (err.code === 'ER_DUP_ENTRY') {
+                        return reject('Assignment already exists');
+                    } else {
+                        console.error("Error saving to database:", err);
+                        return reject('Error saving to database');
+                    }
+                }
+
+                return resolve({ status: 'success', message: 'Assignment updated successfully!' });
+            });
+        });
+    },
+    removeAssignment: async (assignId) => {
+        //create a new assignment with these specifications
+        await con.promise().query('START TRANSACTION');
+        try {
+            console.log(`assignment ${assignId} exists. Deleting associated answers and question.`);
+
+            // Delete the answers first
+            const deleteAnswerSQL = 'DELETE FROM answer WHERE assignId = ?';
+            const [deleteAnswerResult] = await con.promise().query(deleteAnswerSQL, [assignId]);
+            console.log('Deleted answers:', deleteAnswerResult);
+
+            // Delete the question itself
+            const deleteQuestionSQL = 'DELETE FROM question WHERE assignId = ?';
+            const [deleteQuestionResult] = await con.promise().query(deleteQuestionSQL, [assignId]);
+            console.log('Deleted question:', deleteQuestionResult);
+
+            //delete the grades
+            const deleteGradesSQL = 'DELETE FROM grade WHERE assignId = ?';
+            const [deleteGradeResult] = await con.promise().query(deleteGradesSQL, [assignId]);
+            console.log('Deleted question:', deleteGradeResult);
+
+            //delete the assignment now
+            const deleteAssignmentSQL = 'DELETE FROM assignment WHERE id = ?';
+            const [deleteAssignmentResult] = await con.promise().query(deleteAssignmentSQL, [assignId]);
+            console.log('Deleted question:', deleteAssignmentResult);
+
+            await con.promise().query('COMMIT');
+
+            return { status: 'success', message: 'Assignment removed successfully!' };
+        } catch (error) {
+            // If any error occurs, rollback the transaction
+            await con.promise().query('ROLLBACK');
+            console.error('Error occurred while submitting answers:', error);
+            throw error; // Optionally, rethrow or handle the error as needed
+        }
+        
     }
 
 };

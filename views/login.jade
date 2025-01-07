@@ -1,18 +1,18 @@
-extends layout.jade
+extends layout
 
 block toolbar
-    a(id="back" href="/frontPage") Back
-    a(id="sign" href="/signUp") Sign Up
+    a(id="back", href="/frontPage") Back
+    a(id="sign", href="/signUp") Sign Up
 
 block content
     div(class="login")
         div
             label Username:
-            input(type="text" id="username")
+            input(type="text", id="username")
         div
             label Password:
-            input(type="password" id="password")
-        button(id="loginButton" type="submit") Login
+            input(type="password", id="password")
+        button(id="loginButton", type="submit") Login
 
         div(style="color: red;")
             p(id="errorText")

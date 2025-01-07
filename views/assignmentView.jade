@@ -1,4 +1,4 @@
-extends layout.jade
+extends layout
 
 //add an extra link
 block header
@@ -8,11 +8,11 @@ block toolbar
     a(href='/mainPage') Back
 
 block content
-    h1(id='assignmentTitle' class='title') #{assignmentName}
-    div(id='questionHolder' class='question')
+    h1(id='assignmentTitle', class='title') #{assignmentName}
+    div(id='questionHolder', class='question')
         
     div(id='bottomForm')
-        button(id='submitButton' onclick='submitForm()' class='submit') Submit
+        button(id='submitButton', onclick='submitForm()', class='submit') Submit
 
     script.
         var selectedAnswers = new Map();  // Object to store selected answers
