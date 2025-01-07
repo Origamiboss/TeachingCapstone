@@ -117,13 +117,31 @@ router.post('/makeAssignment', async (req, res) => {
 });
 router.post('/editAssignment', async (req, res) => {
     const { className, assignId, assignName, dueDate } = req.body;
+    try {
+        await dbUtils.editAssignment(className, assignId, assignName, dueDate);
 
-    await dbUtils.editAssignment(className, assignId, assignName, dueDate);
+        req.session.assignId = assignId;
+        req.session.assignName = assignName;
 
-    req.session.assignId = assignId;
-    req.session.assignName = assignName;
-
-    return res.json({ status: 'success', id: assignId });
+        return res.json({ status: 'success', id: assignId });
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ error: error.message });
+    }
+    
 });
 
+router.post('/removeAssignment', async (req, res) => {
+    const { assignId } = req.body;
+    try {
+        await dbUtils.removeAssignment(assignId);
+
+        return res.json({ status: 'success', id: assignId });
+    } catch (error){
+        console.error('Error:', error);
+        return res.status(500).json({ error: error.message });
+    }
+
+    
+});
 module.exports = router;

@@ -1,15 +1,28 @@
-extends layout.jade
+extends layout
 
 block toolbar
     a(href='/mainPage') Back
+    button(onclick="aiPanelToggle()") AI Tool
 
 block content
-    h1(id='assignmentTitle' class='title') #{assignmentName}
+    div(id="aiPanelOverlay", class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;") AI Tools
+            form(class="form-container")
+                label(class="form-label", for="name") What would you like your questions to be about?
+                input(id="aiInput", type="text")
+                label(class="form-label", for="name") Number of Questions: 
+                input(id="numOfQuestions", type="integer")
+                p(id="errorText", class="error")
+            button(class="btn-submit", onclick="generateQuestions()") Generate
+            button(class="btn-close-popup", onclick="aiPanelToggle()") Close
+
+    h1(id='assignmentTitle', class='title') #{assignmentName}
     div(id='questionHolder')
     div
         button(onclick="generateQuestion(1, 'Sample Question', [])") Add Question
     div(id='bottomForm')
-        button(id='saveButton' onclick='submitQuestions()' class='submit') Submit
+        button(id='saveButton', onclick='submitQuestions()', class='submit') Submit
     script.
         window.onload = function() {
             var container = document.getElementById('questionHolder');
@@ -185,5 +198,35 @@ block content
             .catch(error => {
                 // Handle fetch error
                 alert('An error occurred: ' + error);
+            });
+        }
+        function aiPanelToggle(){
+            var popup = document.getElementById("aiPanelOverlay");
+            popup.classList.toggle("show");
+        }
+        function generateQuestions(){
+            //send the collected data to the server
+            const numOfQuestions = document.getElementById("numOfQuestions").value;
+            const prompt = document.getElementById("aiInput").value;
+            fetch('/assignmentEditor/generateQuestions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ numOfQuestions: numOfQuestions, prompt: prompt })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    // Handle error
+                    alert(data.error);
+                } else {
+                    //success
+                    console.log(data.questions);
+                }
+            })
+            .catch(error => {
+                // Handle fetch error
+                alert(error);
             });
         }

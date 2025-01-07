@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 // Create a MySQL connection
 const con = mysql.createConnection({
-    host: '192.168.68.60',
+    host: '192.168.68.56',
     user: 'capstoneUser',
     password: 'Zv935YOiwUVv',
     database: 'capstone'
@@ -379,8 +379,45 @@ const dbUtils = {
                 return resolve({ status: 'success', message: 'Assignment updated successfully!' });
             });
         });
+    },
+    removeAssignment: async (assignId) => {
+        //create a new assignment with these specifications
+        await con.promise().query('START TRANSACTION');
+        try {
+            console.log(`assignment ${assignId} exists. Deleting associated answers and question.`);
 
+            // Delete the answers first
+            const deleteAnswerSQL = 'DELETE FROM answer WHERE assignId = ?';
+            const [deleteAnswerResult] = await con.promise().query(deleteAnswerSQL, [assignId]);
+            console.log('Deleted answers:', deleteAnswerResult);
+
+            // Delete the question itself
+            const deleteQuestionSQL = 'DELETE FROM question WHERE assignId = ?';
+            const [deleteQuestionResult] = await con.promise().query(deleteQuestionSQL, [assignId]);
+            console.log('Deleted question:', deleteQuestionResult);
+
+            //delete the grades
+            const deleteGradesSQL = 'DELETE FROM grade WHERE assignId = ?';
+            const [deleteGradeResult] = await con.promise().query(deleteGradesSQL, [assignId]);
+            console.log('Deleted question:', deleteGradeResult);
+
+            //delete the assignment now
+            const deleteAssignmentSQL = 'DELETE FROM assignment WHERE id = ?';
+            const [deleteAssignmentResult] = await con.promise().query(deleteAssignmentSQL, [assignId]);
+            console.log('Deleted question:', deleteAssignmentResult);
+
+            await con.promise().query('COMMIT');
+
+            return { status: 'success', message: 'Assignment removed successfully!' };
+        } catch (error) {
+            // If any error occurs, rollback the transaction
+            await con.promise().query('ROLLBACK');
+            console.error('Error occurred while submitting answers:', error);
+            throw error; // Optionally, rethrow or handle the error as needed
+        }
+        
     }
+
 };
 
 module.exports = dbUtils;

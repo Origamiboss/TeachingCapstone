@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var dbUtils = require('../utils/dbUtils'); // Use relative path to your dbUtils
+var AIScript = require('../utils/AIScript');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -36,5 +37,17 @@ router.post('/submitQuestions', async function (req, res, next) {
         return res.json({ status: 'error', message: err });
     }
 });
+router.post('/generateQuestions', async function (req, res, next) {
+    try {
+        const { numOfQuestions, prompt }= req.body;
 
+        //send the message to dbUtils
+        var questions = await AIScript.generateQuestions(numOfQuestions, prompt);
+
+        return res.json({ status: 'success', questions: questions });
+    } catch (err) {
+        console.error(err);
+        return res.json({ status: 'error', message: err });
+    }
+});
 module.exports = router;

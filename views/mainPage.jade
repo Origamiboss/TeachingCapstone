@@ -1,4 +1,4 @@
-extends layout.jade
+extends layout
 
 block toolbar
     if(role == 'teacher')   
@@ -15,51 +15,66 @@ block content
             if(role == 'teacher')
                 button(onclick="toggleCreateAssignment()") Add Assignment
         div(id="assignmentHolder")
-    div(id="changeClassOverlay" class="overlay-container")
+    div(id="changeClassOverlay", class="overlay-container")
         div(class="popup-box")
-            h2(style="color: green;">Popup Form)
+            h2(style="color: green;") Select Class
             form(class="form-container")
-                label(class="form-label" for="name") Select Your Class
-                div(id="classHolder" class="holder-popup")
+                label(class="form-label", for="name") Select Your Class
+                div(id="classHolder", class="holder-popup")
 
-            button(class="btn-close-popup" onclick="togglePopupChange()") Close
+            button(class="btn-close-popup", onclick="togglePopupChange()") Close
     //teacher form   
-    div(id="createClassOverlay" class="overlay-container")
+    div(id="createClassOverlay", class="overlay-container")
         div(class="popup-box")
-            h2(style="color: green;">Popup Form)
+            h2(style="color: green;") Create Class
             form(class="form-container")
-                label(class="form-label" for="name") Type in your Class ID
-                input(id="classIdInput" type="text")
-                label(class="form-label" for="name") Insert Class Name:
-                input(id="classNameInput" type="text")
-                p(id="errorText" class="error")
-            button(class="btn-submit" onclick="createClass()") Submit
-            button(class="btn-close-popup" onclick="togglePopup()") Close
+                label(class="form-label", for="name") Type in your Class ID
+                input(id="classIdInput", type="text")
+                label(class="form-label", for="name") Insert Class Name:
+                input(id="classNameInput", type="text")
+                p(id="errorText", class="error")
+            button(class="btn-submit", onclick="createClass()") Submit
+            button(class="btn-close-popup", onclick="togglePopup()") Close
     //student form
-    div(id="addClassOverlay" class="overlay-container")
+    div(id="addClassOverlay", class="overlay-container")
         div(class="popup-box")
-            h2(style="color: green;") Popup Form
+            h2(style="color: green;") Add Class
             form(class="form-container")
-                label(class="form-label" for="name") Type in your Class ID
-                input(id="classIdInput" type="text")
-                p(class="error" id="errorText")
-            button(class="btn-submit" onclick="addClass()") Submit
-            button(class="btn-close-popup" onclick="togglePopup()") Close
+                label(class="form-label", for="name") Type in your Class ID
+                input(id="classIdInput", type="text")
+                p(class="error", id="errorText")
+            button(class="btn-submit", onclick="addClass()") Submit
+            button(class="btn-close-popup", onclick="togglePopup()") Close
 
     //create Assigment Overlay
-    div(id="CreateAssignmentOverlay" class="overlay-container")
+    div(id="CreateAssignmentOverlay", class="overlay-container")
         div(class="popup-box")
-            h2(style="color: green;") Popup Form
+            h2(style="color: green;") Create Assignment
             form(class="form-container")
-                label(class="form-label" for="name") Type in your Assignment Name
-                input(id="assignmentName" type="text")
-                label(class="form-label" for="name") Type in your Assignment Id
-                input(id="assignmentId" type="text")
-                label(class="form-label" for="name") Due Date
-                input(id="assignmentDueDate" type="date")
-                p(class="error" id="errorText")
-            button(class="btn-submit" id="createAssignmentButton") Create
-            button(class="btn-close-popup" onclick="toggleCreateAssignment()") Close
+                label(class="form-label", for="name") Type in your Assignment Name
+                input(id="assignmentName", type="text")
+                label(class="form-label", for="name") Type in your Assignment Id
+                input(id="assignmentId", type="text")
+                label(class="form-label", for="name") Due Date
+                input(id="assignmentDueDate", type="date")
+                p(class="error", id="errorText")
+            button(class="btn-submit", id="createAssignmentButton") Create
+            button(class="btn-close-popup", onclick="toggleCreateAssignment()") Close
+    //Edit Assigment Overlay
+    div(id="EditAssignmentOverlay", class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;") Edit Assignment
+            form(class="form-container")
+                label(class="form-label", for="name") Type in your Assignment Name
+                input(id="assignmentName2", type="text")
+                label(class="form-label", for="name") Type in your Assignment Id
+                input(id="assignmentId2", type="text", readonly)
+                label(class="form-label", for="name") Due Date
+                input(id="assignmentDueDate2", type="date")
+                p(class="error", id="errorText")
+            button(class="btn-submit", id="createAssignmentButton2") Edit
+            button(class="btn-remove-popup", id="removeAssignmentButton", onclick="removeAssignment()") Remove
+            button(class="btn-close-popup", onclick="toggleEditAssignment()") Close
     script.
         //set up the role
         var role = `#{role}`;
@@ -247,7 +262,7 @@ block content
                                 editButton.innerHTML = "Edit";
                                 container.appendChild(editButton);
                                 editButton.onclick = function(){
-                                    toggleCreateAssignment(assignments[i].id, assignments[i].name, assignments[i].dueDate);
+                                    toggleEditAssignment(assignments[i].id, assignments[i].name, assignments[i].dueDate);
                                 }
                             }
 
@@ -309,40 +324,40 @@ block content
 
             togglePopupChange();
         }
-        function toggleCreateAssignment(assignId, assignName, assignDate){
+        function toggleCreateAssignment(){
             //no assignment passed
-            if(assignId == null){
-                var popup = document.getElementById("CreateAssignmentOverlay");
-                popup.classList.toggle("show");
+            
+            var popup = document.getElementById("CreateAssignmentOverlay");
+            popup.classList.toggle("show");
 
-                //reset the values
-                document.getElementById("assignmentId").value = null;
-                document.getElementById("assignmentName").value = null;
-                document.getElementById("assignmentDueDate").value = null;
+            //reset the values
+            document.getElementById("assignmentId").value = null;
+            document.getElementById("assignmentName").value = null;
+            document.getElementById("assignmentDueDate").value = null;
 
-                document.getElementById("createAssignmentButton").onclick = function() {
-                    assignId = document.getElementById("assignmentId").value;
-                    assignName = document.getElementById("assignmentName").value;
-                    assignDate = document.getElementById("assignmentDueDate").value;
-                    createAssignment(assignId, assignName, assignDate); // Call createAssignment when the button is clicked
-                };
-            }else{
-                //assignment passed
-                //toggle the create assignment
-                var popup = document.getElementById("CreateAssignmentOverlay");
+            document.getElementById("createAssignmentButton").onclick = function() {
+                assignId = document.getElementById("assignmentId").value;
+                assignName = document.getElementById("assignmentName").value;
+                assignDate = document.getElementById("assignmentDueDate").value;
+                createAssignment(assignId, assignName, assignDate); // Call createAssignment when the button is clicked
+            };
+            
+        }
+        function toggleEditAssignment(assignId, assignName, assignDate){
+                //toggle the edit assignment
+                var popup = document.getElementById("EditAssignmentOverlay");
                 popup.classList.toggle("show");
                 //fill the information of the assignment
-                document.getElementById("assignmentId").value = assignId;
-                document.getElementById("assignmentName").value = assignName;
-                document.getElementById("assignmentDueDate").value = assignDate;
+                document.getElementById("assignmentId2").value = assignId;
+                document.getElementById("assignmentName2").value = assignName;
+                document.getElementById("assignmentDueDate2").value = assignDate;
 
-                document.getElementById("createAssignmentButton").onclick = function() {
-                    assignId = document.getElementById("assignmentId").value;
-                    assignName = document.getElementById("assignmentName").value;
-                    assignDate = document.getElementById("assignmentDueDate").value;
+                document.getElementById("createAssignmentButton2").onclick = function() {
+                    assignId = document.getElementById("assignmentId2").value;
+                    assignName = document.getElementById("assignmentName2").value;
+                    assignDate = document.getElementById("assignmentDueDate2").value;
                     editAssignment(assignId, assignName, assignDate); // Call editAssignment with the correct data
                 };
-            }
         }
         function createAssignment(assignId, assignName, dueDate){
             console.log("Create assignment");
@@ -383,11 +398,36 @@ block content
                     //update the class view
                     selectClass(globalClassName);
                     //close the panel
-                    toggleCreateAssignment();
+                    toggleEditAssignment();
                 }
             })
             .catch(error => {
                 console.log(error);
             });
 
+        }
+        function removeAssignment(){
+            //remove an assignment
+            assignId = document.getElementById("assignmentId2").value;
+            fetch('/mainPage/removeAssignment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({assignId: assignId})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.log(data.error);
+                } else {
+                    //update the class view
+                    selectClass(globalClassName);
+                    //close the panel
+                    toggleEditAssignment();
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            });
         }
