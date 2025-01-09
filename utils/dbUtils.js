@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 // Create a MySQL connection
 const con = mysql.createConnection({
-    host: '192.168.68.56',
+    host: '192.168.68.61',
     user: 'capstoneUser',
     password: 'Zv935YOiwUVv',
     database: 'capstone'

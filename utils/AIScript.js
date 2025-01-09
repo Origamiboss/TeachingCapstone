@@ -1,29 +1,49 @@
-const axios = require('axios');
+﻿const { HfInference } = require('@huggingface/inference');
+const hf = new HfInference('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');
 
 const AIScript = {
     generateQuestions: async (numOfQuestions, prompt) => {
-        const postData = {
-            prompt: `Generate ${numOfQuestions} questions based on the following prompt: ${prompt}`,
-            max_tokens: 100, // Adjust as needed to ensure the response is sufficiently long
-            n: 1,  // Return 1 response
-            stop: ["\n"] // Optional: stop generation at the end of each question
-        };
-        const key = 'Test';
-        try {
-            const response = await axios.post('https://api.openai.com/v1/completions', postData, {
-                headers: {
-                    Authorization: `Bearer ${key}`, // Proper format for OpenAI API
-                    'Content-Type': 'application/json',
-                },
-            });
-            const questions = response.data.choices[0].text.trim().split('\n');
-            return questions;
-        } catch (error) {
-            console.error('Error:', error.message || error);
-            return []; // Return an empty array or a default value
-        }
+        // Construct the input for the AI model
+        const questionSetup = `
+Generate ${numOfQuestions} multiple-choice questions about "${prompt}" in the following JSON format:
+{ "prompt": "What is the quadratic formula?", "correct_answer": "x = (-b ± √(b² - 4ac)) / 2a", "possible_answers": ["x = (b ± √(b² - 4ac)) / 2a", "x = (-b ± √(b² - 4ac)) / 2a", "x = (-b ± √(b² - 4ac)) / a", "x = (-b ± √(b² - 4ac)) / (2a)"] }
+Generate questions that are simple and easy to understand.
+`;
+        const requirements = "Please make them suitable for children with dyslexia.";
 
-    }
-}
+        // Call the Hugging Face API
+        const result = await hf.textGeneration({
+            model: 'google/flan-t5-large', // Upgrade for better outputs
+            inputs: questionSetup + requirements,
+            parameters: { max_new_tokens: 200 },
+        });
+
+        const questions = [];
+        try {
+            console.log("Generated text:", result.generated_text);
+            const lines = result.generated_text.split('\n'); // Assuming questions are separated by new lines
+
+            lines.forEach((line, index) => {
+                try {
+                    const jsonLine = JSON.parse(line.trim()); // Attempt JSON parsing
+                    questions.push({
+                        num: index + 1,
+                        prompt: jsonLine.prompt,
+                        correctAnswer: jsonLine.correct_answer,
+                        answers: jsonLine.possible_answers,
+                    });
+                } catch (err) {
+                    console.warn("Skipping invalid line:", line);
+                }
+            });
+        } catch (error) {
+            console.error("Error parsing AI response:", error.message);
+        }
+        console.log("Parsed questions:", questions);
+        return questions;
+    },
+};
+
+
 
 module.exports = AIScript;
