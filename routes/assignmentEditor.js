@@ -1,7 +1,9 @@
-var express = require('express');
+const express = require('express');
+const multer = require('multer');
 var router = express.Router();
 var dbUtils = require('../utils/dbUtils'); // Use relative path to your dbUtils
 var AIScript = require('../utils/AIScript');
+const path = require('path');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -37,17 +39,66 @@ router.post('/submitQuestions', async function (req, res, next) {
         return res.json({ status: 'error', message: err });
     }
 });
-router.post('/generateQuestions', async function (req, res, next) {
-    try {
-        const { numOfQuestions, prompt }= req.body;
 
-        //send the message to dbUtils
-        var questions = await AIScript.generateQuestions(numOfQuestions, prompt);
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        // Specify where to store the uploaded files
+        cb(null, 'uploads/');  // You may want to create this directory
+    },
+    filename: function (req, file, cb) {
+        // Ensure unique filenames
+        cb(null, Date.now() + path.extname(file.originalname));  // Use a timestamp as filename
+    }
+});
+//stuff for pdfs
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 },  // Limit file size to 5MB
+    fileFilter: function (req, file, cb) {
+        // Only accept PDF files
+        if (file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            cb(new Error('Only PDF files are allowed'), false);
+        }
+    }
+});
+//generate pdf questions
+router.post('/generateQuestions', upload.single('pdf'), async function (req, res, next) {
+    try {
+        // Extract form data
+        const { numOfQuestions, prompt } = req.body;
+
+        // Access the uploaded file via req.file
+        const file = req.file;  // This will hold the uploaded file data
+
+        if (!file) {
+            return res.json({ status: 'error', message: 'No file uploaded' });
+        }
+
+        // If file and form data are valid, process the questions
+        var questions = await AIScript.generateQuestions(numOfQuestions, prompt, file);  // Pass file if needed
 
         return res.json({ status: 'success', questions: questions });
     } catch (err) {
         console.error(err);
-        return res.json({ status: 'error', message: err });
+        return res.json({ status: 'error', message: err.message });
     }
 });
+//error handling
+// Multer error handling middleware
+router.use(function (err, req, res, next) {
+    if (err instanceof multer.MulterError) {
+        // Multer-specific errors (e.g., file size too large)
+        res.status(400).json({ status: 'error', message: err.message });
+    } else {
+        // Other errors
+        res.status(500).json({ status: 'error', message: 'Server error' });
+    }
+});
+
+
+
+
+
 module.exports = router;

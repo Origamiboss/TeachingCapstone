@@ -9,10 +9,12 @@ block content
         div(class="popup-box")
             h2(style="color: green;") AI Tools
             form(class="form-container")
-                label(class="form-label", for="name") What would you like your questions to be about?
-                input(id="aiInput", type="text")
-                label(class="form-label", for="name") Number of Questions: 
-                input(id="numOfQuestions", type="integer")
+                label(class="form-label", for="name") What would you like your questions to be about (Can be left blank)?
+                input(id="aiInput",name="name", type="text")
+                label(class="form-label", for="questions") Number of Questions: 
+                input(id="numOfQuestions",name="questions", type="integer")
+                label(class="form-label", for="pdf") Upload a PDF of your slides or document: 
+                input(type="file", name="pdf", accept="application/pdf")
                 p(id="errorText", class="error")
             button(class="btn-submit", onclick="generateQuestions()") Generate
             button(class="btn-close-popup", onclick="aiPanelToggle()") Close
@@ -204,29 +206,56 @@ block content
             var popup = document.getElementById("aiPanelOverlay");
             popup.classList.toggle("show");
         }
-        function generateQuestions(){
-            //send the collected data to the server
-            const numOfQuestions = document.getElementById("numOfQuestions").value;
-            const prompt = document.getElementById("aiInput").value;
-            fetch('/assignmentEditor/generateQuestions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ numOfQuestions: numOfQuestions, prompt: prompt })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    // Handle error
-                    alert(data.error);
-                } else {
-                    //success
-                    console.log(data.questions);
+        function generateQuestions() {
+            try {
+                // Get the file input element
+                const fileInput = document.querySelector('input[name="pdf"]');
+        
+                if (!fileInput.files.length) {
+                    throw Error('Please select a PDF file.');
                 }
-            })
-            .catch(error => {
-                // Handle fetch error
-                alert(error);
-            });
+
+                const file = fileInput.files[0];
+
+                // Validate the file
+                if (file.type !== 'application/pdf') {
+                    throw Error('Only PDF files are allowed.');
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    throw Error('File must be less than 5MB.');
+                }
+
+                // Create FormData and append the file
+                const formData = new FormData();
+                formData.append('pdf', file);
+
+                // Get other form data
+                const numOfQuestions = document.getElementById("numOfQuestions").value;
+                const prompt = document.getElementById("aiInput").value;
+
+                // Append other form data to FormData
+                formData.append('numOfQuestions', numOfQuestions);
+                formData.append('prompt', prompt);
+
+                // Send data to the server
+                fetch('/assignmentEditor/generateQuestions', {
+                    method: 'POST',
+                    body: formData  // Send as FormData (no need to set Content-Type)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        console.log(data.questions); // Handle success
+                    }
+                })
+                .catch(error => {
+                    alert('An error occurred: ' + error);
+                });
+            } catch (error) {
+                console.error(error);
+                const errorText = document.getElementById("errorText").innerHTML = error;
+            }
         }
