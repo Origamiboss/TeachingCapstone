@@ -1,10 +1,14 @@
 ﻿const { HfInference } = require('@huggingface/inference');
 const hf = new HfInference('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');
+const { OpenAI } = require("openai");
+
 
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 
-
+const openai = new OpenAI({
+    apiKey: "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",
+});
 
 const AIScript = {
     generateQuestions: async (numOfQuestions, prompt, file) => {
@@ -17,266 +21,98 @@ const AIScript = {
         const pdfText = data.text;
 
         console.log("Extracted PDF Text:", pdfText);
+        //our questions
+        var generatedQuestions = [];
 
         try {
-            //what question are we on
-            let i = 1;
             // Combine the prompt and extracted text into a single string for the model
-            const combinedInput = `Prompt: ${prompt}\n\nExtracted Text: ${pdfText}\n\nGenerate a question based on the above text.`;
+            const combinedInput = `Generate ${numOfQuestions} questions on this information (${pdfText}) in JSON format with {question: , correctAnswer: , wrongAnswers: }, One correct answer and Three wrong answers.`;
 
-            // Use a more suitable model like T5 or BART
-            const promptResult = await hf.textGeneration({
-                model: 'google/flan-t5-large',  // Or another model like 'facebook/bart-large'
-                inputs: combinedInput,
-                parameters: {
-                    max_new_tokens: 150,
-                    temperature: 0.7,
-                    top_p: 0.8,
-                    top_k: 50,
-                    do_sample: true
-                },
+            
+            // Ping OpenAI
+            const promptResult = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                store: true,
+                messages: [
+                    { "role": "user", "content": combinedInput },
+                ],
             });
 
-            // Extract the generated questions
-            const questions = promptResult.generated_text.trim().split('\n').map(q => q.trim());
+            // Log the API response for debugging
+            console.log("API Response:", promptResult);
 
-            console.log("Generated questions:", questions);
+            // Extract the response text (this may not be JSON but plain text)
+            const responseText = promptResult.choices[0].message.content.trim();
 
-            //generate the correct answer
-            const answerSetup = `Extracted Text: ${pdfText}\n\nGenerate a correct answer for "${questions}" in one sentence.`;
-            const answerResult = await hf.textGeneration({
-                model: 'google/flan-t5-large',
-                inputs: answerSetup,
-                parameters: {
-                    max_new_tokens: 250,
-                    temperature: 0.3,
-                    do_sample: true
-                },
-            });
+            // Look for the JSON content after the "```json" part (if it exists)
+            const jsonStart = responseText.indexOf("```json");
+            const jsonEnd = responseText.indexOf("```", jsonStart + 7);
 
-            console.log("Correct Answer:", answerResult.generated_text);
+            if (jsonStart !== -1 && jsonEnd !== -1) {
+                // Extract the JSON part from the response text
+                const jsonString = responseText.slice(jsonStart + 7, jsonEnd).trim();
 
-
-            // Generate wrong answers
-            const wrongAnswers = [];
-            const uniqueAnswersSet = new Set(); // To track unique wrong answers
-
-            const wrongPromptModifiers = [
-                'Generate a wrong answer for this question that is brief and incorrect.',
-                'Give a plausible but incorrect answer to this question in one sentence.',
-                'Generate an incorrect, plausible one-sentence answer to the following question.',
-                'Give me a wrong answer for the question that is short and wrong.',
-                'I need a wrong answer for this question that fits in one sentence.',
-                'I want a wrong answer for this question that is short and difficult to spot.',
-                'Generate an incorrect answer to the question that is brief and wrong.',
-                'Generate a wrong, plausible one-sentence answer to the following question.',
-                'I need a random statement that is short.'
-            ];
-
-            for (let j = 0; j < 3; j++) {
-                let wrongAnswerResult;
-                let newAnswer;
-
-                // Retry mechanism to ensure unique wrong answers
-                let attempts = 0;
-                let promptModifier;
-
-                do {
-                    // Dynamically choose a different prompt modifier each time
-                    promptModifier = wrongPromptModifiers[(j + attempts) % wrongPromptModifiers.length]; // Use modulo to cycle through the modifiers
-
-                    // Set up the query with the dynamic prompt
-                    const wrongAnswerSetup = `Extracted Text: ${pdfText}\n\n${promptModifier} The question is: "${questions}"`;
-
-                    // Send the query with increased creativity (temperature 0.9)
-                    wrongAnswerResult = await hf.textGeneration({
-                        model: 'google/flan-t5-large',
-                        inputs: wrongAnswerSetup,
-                        parameters: {
-                            max_new_tokens: 250,
-                            temperature: .5,
-                            do_sample: true
-                        },
-                    });
-
-                    newAnswer = wrongAnswerResult.generated_text.trim();
-
-                    // If answer is not unique, increase attempts
-                    attempts++;
-
-                } while (uniqueAnswersSet.has(newAnswer) && attempts < wrongPromptModifiers.length); // Retry until the answer is unique or all modifiers are used
-
-                // Add the new unique wrong answer to the list and the Set for uniqueness
-                wrongAnswers.push(newAnswer);
-                uniqueAnswersSet.add(newAnswer);
-            }
-
-            console.log("Generated Wrong Answers:", wrongAnswers.join(', '));
-
-            //compile all the information
-            const answers = [];
-            const rightPosition = Math.floor(Math.random() * 4);
-
-            for (let j = 0; j < 4; j++) {
-                if (j === rightPosition) {
-                    answers[j] = answerResult.generated_text.trim();
-                } else {
-                    answers[j] = wrongAnswers.pop()?.trim() || "Placeholder wrong answer";
+                // Check if the extracted string is valid JSON
+                let questions = [];
+                try {
+                    // Parse the extracted JSON string
+                    questions = JSON.parse(jsonString);
+                    console.log("Raw JSON String:", jsonString);
+                } catch (error) {
+                    console.error("Error parsing JSON:", error);
+                    console.log("Raw JSON String:", jsonString);
                 }
+
+                // Initialize the generatedQuestions array
+                let generatedQuestions = [];
+
+                // Process the parsed questions
+                for (let i = 0; i < questions.length; i++) {
+                    // Combine the correct answer with the wrong answers
+                    let allAnswers = [
+                        { prompt: questions[i].correctAnswer },
+                        ...questions[i].wrongAnswers.map(answer => ({ prompt: answer }))
+                    ];
+
+
+                    // Shuffle the answers randomly
+                    allAnswers = shuffle(allAnswers);
+
+                    // Push the question with shuffled answers into the generatedQuestions array
+                    generatedQuestions.push({
+                        num: i + 1,
+                        prompt: questions[i].question, // Use the first generated question
+                        correctAnswer: questions[i].correctAnswer, // Correct answer
+                        answers: allAnswers, // Array of answers (correct + wrong, shuffled)
+                    });
+                }
+
+                // Return or log the generated questions
+                console.log("Generated Questions:", generatedQuestions);
+                return generatedQuestions;
+            } else {
+                console.error("No JSON found in the response text.");
+                return [];
             }
 
-            questions.push({
-                num: i + 1,
-                prompt: question,
-                correctAnswer: answerResult.generated_text.trim(),
-                answers: answers,
-            });
-
-
-            return questions; // Return the generated questions
-        } catch (err) {
-            console.error("Error generating questions:", err.message);
+        } catch (error) {
+            console.error("Error generating questions:", error);
             throw new Error("An error occurred while generating questions.");
         }
+        return generatedQuestions; // Return the generated questions
     },
 
-    /*generateQuestions: async (numOfQuestions, prompt, file) => {
-        const questions = [];
-        for (let i = 0; i < numOfQuestions; i++) {
-            //generate the questions based on these templates
-            const questionModifiers = [
-                'Generate a simple introductory question about',
-                'Create a complex and thought-provoking question on',
-                'Make a question about',
-                'Generate a multiple-choice style question about',
-            ];
-
-            const endingMarker = [
-                'Make the question difficult.',
-                'Make the question simple.',
-                'Make the question easy',
-                'Make the question hard',
-            ];
-            //randomly select a question Modifier
-            const questionModifier = questionModifiers[Math.floor(Math.random() * questionModifiers.length)];
-            const questionSetup = questionModifier + ` "${prompt}". ` + endingMarker[Math.floor(Math.random() * endingMarker.length)];
-            console.log("Initial Prompt: " + questionSetup);
-
-            try {
-                // Generate the question and increase the temperature to .7 for creativity
-                const promptResult = await hf.textGeneration({
-                    model: 'google/flan-t5-large',
-                    inputs: questionSetup,
-                    parameters: {
-                        max_new_tokens: 250,
-                        temperature: 0.7,
-                        top_p: 0.8,
-                        top_k: 50,
-                        do_sample: true
-                    },
-                });
-                // generated text
-                var question = promptResult.generated_text.trim();
-
-                console.log("Generated question:", question);
-
-                // Generate the correct answer
-                const answerSetup = `Generate a correct answer for "${question}" in one sentence.`;
-                const answerResult = await hf.textGeneration({
-                    model: 'google/flan-t5-large',
-                    inputs: answerSetup,
-                    parameters: {
-                        max_new_tokens: 250,
-                        temperature: 0.3,
-                        do_sample: true
-                    },
-                });
-                console.log("Generated answer:", answerResult.generated_text);
-
-                // Generate wrong answers
-                const wrongAnswers = [];
-                const uniqueAnswersSet = new Set(); // To track unique wrong answers
-
-                const wrongPromptModifiers = [
-                    'Generate a wrong answer for this question that is brief and incorrect.',
-                    'Give a plausible but incorrect answer to this question in one sentence.',
-                    'Generate an incorrect, plausible one-sentence answer to the following question.',
-                    'Give me a wrong answer for the question that is short and wrong.',
-                    'I need a wrong answer for this question that fits in one sentence.',
-                    'I want a wrong answer for this question that is short and difficult to spot.',
-                    'Generate an incorrect answer to the question that is brief and wrong.',
-                    'Generate a wrong, plausible one-sentence answer to the following question.',
-                    'I need a random statement that is short.'
-                ];
-
-                for (let j = 0; j < 3; j++) {
-                    let wrongAnswerResult;
-                    let newAnswer;
-
-                    // Retry mechanism to ensure unique wrong answers
-                    let attempts = 0;
-                    let promptModifier;
-
-                    do {
-                        // Dynamically choose a different prompt modifier each time
-                        promptModifier = wrongPromptModifiers[(j + attempts) % wrongPromptModifiers.length]; // Use modulo to cycle through the modifiers
-
-                        // Set up the query with the dynamic prompt
-                        const wrongAnswerSetup = `${promptModifier} The question is: "${question}"`;
-
-                        // Send the query with increased creativity (temperature 0.9)
-                        wrongAnswerResult = await hf.textGeneration({
-                            model: 'google/flan-t5-large',
-                            inputs: wrongAnswerSetup,
-                            parameters: {
-                                max_new_tokens: 250,
-                                temperature: .5,
-                                do_sample: true
-                            },
-                        });
-
-                        newAnswer = wrongAnswerResult.generated_text.trim();
-
-                        // If answer is not unique, increase attempts
-                        attempts++;
-
-                    } while (uniqueAnswersSet.has(newAnswer) && attempts < wrongPromptModifiers.length); // Retry until the answer is unique or all modifiers are used
-
-                    // Add the new unique wrong answer to the list and the Set for uniqueness
-                    wrongAnswers.push(newAnswer);
-                    uniqueAnswersSet.add(newAnswer);
-                }
-
-                console.log("Generated Wrong Answers:", wrongAnswers.join(', '));
-
-
-
-
-                //compile all the information
-                const answers = [];
-                const rightPosition = Math.floor(Math.random() * 4);
-
-                for (let j = 0; j < 4; j++) {
-                    if (j === rightPosition) {
-                        answers[j] = answerResult.generated_text.trim();
-                    } else {
-                        answers[j] = wrongAnswers.pop()?.trim() || "Placeholder wrong answer";
-                    }
-                }
-
-                questions.push({
-                    num: i + 1,
-                    prompt: question,
-                    correctAnswer: answerResult.generated_text.trim(),
-                    answers: answers,
-                });
-            } catch (err) {
-                console.warn(`Error generating question ${i + 1}:`, err.message);
-            }
-        }
-        return questions;
-    },*/
+    
 };
+
+// Fisher-Yates shuffle function to randomize array elements
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+    }
+    return array;
+}
 
 module.exports = AIScript;
 

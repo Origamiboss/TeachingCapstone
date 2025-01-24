@@ -4,7 +4,7 @@ var dbUtils = require('../utils/dbUtils'); // Use relative path to your dbUtils
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
-    res.render('mainPage', { title: 'Home', role: req.session.role });
+    res.render('mainPage', { title: 'Home', role: req.session.role , className: req.session.className});
 });
 
 // Find classes
@@ -49,10 +49,10 @@ router.post('/addClassConnection', async (req, res) => {
 // Add a new class (for teachers)
 router.post('/addClass', async (req, res) => {
     if (req.session.role === 'teacher') {
-        const { classId, className } = req.body;
-
+        const { className } = req.body;
+        const username = req.session.username;
         try {
-            const result = await dbUtils.addClass(classId, className);
+            const result = await dbUtils.addClass(username, className);
 
             if (result && result.status === 'success') {
                 return res.json({ status: 'success', message: result.message });
@@ -80,7 +80,8 @@ router.post('/logout', (req, res) => {
 router.post('/findAssignments', async (req, res) => {
     // Get the className
     const { className } = req.body;
-
+    //set the class as the last visited class
+    req.session.className = className;
     try {
         const result = await dbUtils.findAssignments(className, req.session.username);  // `await` is used here
 
@@ -106,15 +107,26 @@ router.post('/goToAssignment', async (req, res) => {
 });
 //make an assignment and then go there
 router.post('/makeAssignment', async (req, res) => {
-    const { className, assignId, assignName, dueDate } = req.body;
+    const { className, assignName, dueDate } = req.body;
 
-    await dbUtils.makeAssignment(className, assignId, assignName, dueDate);
+    try {
+        // Await the resolved object from makeAssignment
+        const result = await dbUtils.makeAssignment(className, assignName, dueDate);
 
-    req.session.assignId = assignId;
-    req.session.assignName = assignName;
+        // Extract assignId from the result
+        const assignId = result.assignId;
 
-    return res.json({ status: 'success', id: assignId });
+        // Store the ID and assignment name in session
+        req.session.assignId = assignId;
+        req.session.assignName = assignName;
+
+        return res.json({ status: 'success', id: assignId });
+    } catch (err) {
+        console.error(err);
+        return res.json({ status: 'error', error: err });
+    }
 });
+
 router.post('/editAssignment', async (req, res) => {
     const { className, assignId, assignName, dueDate } = req.body;
     try {

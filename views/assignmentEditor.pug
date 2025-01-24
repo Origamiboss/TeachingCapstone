@@ -1,0 +1,30 @@
+extends layout
+
+block toolbar
+    a(href='/mainPage') Back
+    button(onclick="aiPanelToggle()") AI Tool
+
+block content
+    div(id="aiPanelOverlay", class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;") AI Tools
+            form(class="form-container")
+                label(class="form-label", for="name") What would you like your questions to be about (Can be left blank)?
+                input(id="aiInput",name="name", type="text")
+                label(class="form-label", for="questions") Number of Questions: 
+                input(id="numOfQuestions",name="questions", type="number")
+                label(class="form-label", for="pdf") Upload a PDF of your slides or document: 
+                input(type="file", name="pdf", accept="application/pdf")
+                p(id="errorText", class="error")
+            button(class="btn-submit", onclick="generateQuestions()") Generate
+            button(class="btn-close-popup", onclick="aiPanelToggle()") Close
+
+    h1(id='assignmentTitle', class='title') #{assignmentName}
+    div(id='questionHolder')
+    div
+        button(onclick="generateQuestion(1, 'Sample Question', [])") Add Question
+    div(id='bottomForm')
+        button(id='saveButton', onclick='submitQuestions()', class='submit') Submit
+    
+        script(src="js/assignmentEditor.js")
+        
