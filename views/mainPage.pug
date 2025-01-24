@@ -1,0 +1,81 @@
+extends layout
+
+block toolbar
+    if(role == 'teacher')   
+        button(onclick="togglePopup()") Create Class
+    if(role == 'student')
+        button(onclick="togglePopup()") Add Class
+    button(onclick="findClass()") Change Class
+    button(onclick="logOut()") Sign Out
+block content
+    div(class="assignments")
+        div
+            h3 Assignments:
+            //check if teacher
+            if(role == 'teacher')
+                button(onclick="toggleCreateAssignment()") Add Assignment
+        div(id="assignmentHolder")
+    div(id="changeClassOverlay", class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;") Select Class
+            form(class="form-container")
+                label(class="form-label", for="name") Select Your Class
+                div(id="classHolder", class="holder-popup")
+
+            button(class="btn-close-popup", onclick="togglePopupChange()") Close
+    //teacher form   
+    div(id="createClassOverlay", class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;") Create Class
+            form(class="form-container")
+                label(class="form-label", for="name") Insert Class Name:
+                input(id="classNameInput", type="text")
+                p(id="errorText", class="error")
+            button(class="btn-submit", onclick="createClass()") Submit
+            button(class="btn-close-popup", onclick="togglePopup()") Close
+    //student form
+    div(id="addClassOverlay", class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;") Add Class
+            form(class="form-container")
+                label(class="form-label", for="name") Type in your Class ID
+                input(id="classIdInput", type="text")
+                p(class="error", id="errorText")
+            button(class="btn-submit", onclick="addClass()") Submit
+            button(class="btn-close-popup", onclick="togglePopup()") Close
+
+    //create Assigment Overlay
+    div(id="CreateAssignmentOverlay", class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;") Create Assignment
+            form(class="form-container")
+                label(class="form-label", for="name") Type in your Assignment Name
+                input(id="assignmentName", type="text")
+
+                label(class="form-label", for="name") Due Date
+                input(id="assignmentDueDate", type="date")
+                p(class="error", id="errorText")
+            button(class="btn-submit", id="createAssignmentButton") Create
+            button(class="btn-close-popup", onclick="toggleCreateAssignment()") Close
+    //Edit Assigment Overlay
+    div(id="EditAssignmentOverlay", class="overlay-container")
+        div(class="popup-box")
+            h2(style="color: green;") Edit Assignment
+            form(class="form-container")
+                label(class="form-label", for="name") Type in your Assignment Name
+                input(id="assignmentName2", type="text")
+                label(class="form-label", for="name") Type in your Assignment Id
+                input(id="assignmentId2", type="text", readonly)
+                label(class="form-label", for="name") Due Date
+                input(id="assignmentDueDate2", type="date")
+                p(class="error", id="errorText")
+            button(class="btn-submit", id="createAssignmentButton2") Edit
+            button(class="btn-remove-popup", id="removeAssignmentButton", onclick="removeAssignment()") Remove
+            button(class="btn-close-popup", onclick="toggleEditAssignment()") Close
+
+    script.
+        //save the information that the other file needs
+        var role = "#{role}";
+        var globalClassName = "#{className}";
+    script(src="js/mainPage.js")
+        

@@ -1,0 +1,28 @@
+extends layout
+
+block toolbar
+        a(id="back", href="/") Back
+        a(id="sign", href="/login") Log In
+
+block content
+    div(class="login")
+        div
+            label Username:
+            input(type="text", id="username")
+        div
+            label Password:
+            input(type="password", id="password")
+        div
+            label Rewrite Password:
+            input(type="password", id="repassword")
+        div
+            label Teacher
+            input(id="teacherBox", type="checkbox", checked)
+            label Student
+            input(id="studentBox", type="checkbox")
+        button(id="SubmitButton", type="submit") Sign Up
+        div(id="error", class="error", style="visibility: hidden;")
+            p(id="errorText") a
+
+    script(src="js/signUp.js")
+

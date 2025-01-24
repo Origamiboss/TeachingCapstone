@@ -5,6 +5,7 @@ try {
     var path = require('path');
     var cookieParser = require('cookie-parser');
     var logger = require('morgan');
+    var favicon = require('serve-favicon');
 } catch (error) {
     console.error("Error during initialization:", error);
 }
@@ -20,11 +21,13 @@ var app = express();
 
 // View engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'pug');
 
 // Body parsing middleware
 app.use(express.json());  // For parsing application/json
 app.use(express.urlencoded({ extended: true }));  // For parsing application/x-www-form-urlencoded
+app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.ico')));
+
 
 //set up cookies
 app.use(session({
@@ -41,7 +44,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.use('/', frontPageRouter);  // Handles the root URL
-app.use('/frontPage', frontPageRouter);  // This may not be needed if same as '/'
 app.use('/login', loginRouter);  // Handles login page and login POST
 app.use('/signUp', signUpRouter);
 app.use('/mainPage', mainPageRouter);
@@ -59,7 +61,7 @@ app.use(function (err, req, res, next) {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
     res.status(err.status || 500);
-    res.render('error');
+    res.render('error', { title: 'Error' });
 });
 
 // Set up server to listen on a port

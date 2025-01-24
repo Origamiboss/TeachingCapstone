@@ -1,7 +1,7 @@
 doctype html
 html
   head
-    title= title || 'Default Title'
+    title #{title || 'Default Title'}
     link(rel='stylesheet', href='/stylesheets/style.css')
     script(src="https://code.jquery.com/jquery-3.6.0.min.js")
     block header
@@ -9,3 +9,4 @@ html
     div(class='toolbar')
         block toolbar
     block content
+    
