@@ -6,6 +6,9 @@ console.log(role);
 //Auto select a class
 window.onload = function () {
     console.log(globalClassName);
+    resetPage();
+}
+function resetPage() {
     if (globalClassName == "") {
         //Make sure they know that no class is selected
         var container = document.getElementById("assignmentHolder");
@@ -15,7 +18,6 @@ window.onload = function () {
         selectClass(globalClassName, true);
     }
 }
-
 function logOut() {
     fetch('/mainPage/logout', {
         method: 'POST',
@@ -70,6 +72,11 @@ function findClass() {
                         button.innerHTML = classNames[i];
                         button.onclick = function () {
                             selectClass(classNames[i], true);
+                            //set class id for the selected class if your a teacher
+                            if (role === "teacher") {
+                                const ids = data.ids;
+                                document.getElementById("classIdDisplay").innerHTML = "Class ID: " + ids[i];
+                            }
                             togglePopupChange();
                         };
                         container.appendChild(button);
@@ -147,7 +154,7 @@ function addClass() {
             } else {
                 // Successful response
                 console.log(data.classes);
-                toggleAddPopup();
+                togglePopup();
             }
         })
         .catch(error => {
@@ -175,30 +182,53 @@ function selectClass(className, preventDefault = false) {
                 console.log(data.error);
             } else {
                 // Successful response
+                //find assignments
                 const assignments = data.assignments;
                 var container = document.getElementById("assignmentHolder");
                 container.innerHTML = '';
 
                 if (assignments.length === 0) {
-                    let noAssignmentsMessage = document.createElement('p');
+                    const holder = document.createElement('tr');
+                    let noAssignmentsMessage = document.createElement('td');
+                    holder.appendChild(noAssignmentsMessage);
                     noAssignmentsMessage.innerHTML = 'No assignments found';
-                    container.appendChild(noAssignmentsMessage);
+                    container.appendChild(holder);
                 } else {
                     for (let i = 0; i < assignments.length; i++) {
+                        //create the row
+                        const holder = document.createElement('tr');
+
+                        const assignmentButton = document.createElement('td');
                         let button = document.createElement('button');
                         if (role == 'student') {
                             button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate + " Grade: " + assignments[i].grade;
-                            container.appendChild(button);
+                            assignmentButton.appendChild(button);
+                            holder.appendChild(assignmentButton);
                         } else if (role == 'teacher') {
-                            button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate + " Grade: ";
-                            container.appendChild(button);
+                            button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate;
+                            assignmentButton.appendChild(button);
+                            holder.appendChild(assignmentButton);
 
+                            const editButton = document.createElement('td');
                             //make the edit assignment button
-                            let editButton = document.createElement('button');
-                            editButton.innerHTML = "Edit";
-                            container.appendChild(editButton);
-                            editButton.onclick = function () {
+                            let newbutton = document.createElement('button');
+                            newbutton.innerHTML = "Edit";
+
+                            editButton.appendChild(newbutton);
+                            holder.appendChild(editButton);
+                            newbutton.onclick = function () {
                                 toggleEditAssignment(assignments[i].id, assignments[i].name, assignments[i].dueDate);
+                            }
+
+                            //see grades button
+                            const gradeButton = document.createElement('td');
+                            let newestbutton = document.createElement('button');
+                            newestbutton.innerHTML = "Grades";
+
+                            gradeButton.appendChild(newestbutton);
+                            holder.appendChild(gradeButton);
+                            newestbutton.onclick = function () {
+                                seeGrades(assignments[i].id, assignments[i].name);
                             }
                         }
 
@@ -248,6 +278,7 @@ function selectClass(className, preventDefault = false) {
                             }
                         };
 
+                        container.appendChild(holder);
                     }
 
 
@@ -362,4 +393,50 @@ function removeAssignment() {
         .catch(error => {
             console.log(error);
         });
+}
+function seeGrades(assignId, assignName) {
+    fetch('/mainPage/seeGrades', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ assignId: assignId, assignName: assignName })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.log(data.error);
+            } else {
+                //go to the gradeView
+                window.location.href = "/gradeView";
+            }
+        })
+        .catch(error => {
+            console.log(error);
+        });
+}
+function removeClass() {
+    if (globalClassName != "") {
+        //delete the class
+        fetch('/mainPage/deleteClass', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ className: globalClassName })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.log(data.error);
+                } else {
+                    //remove class stats
+                    globalClassName = "";
+                    resetPage();
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    }
 }

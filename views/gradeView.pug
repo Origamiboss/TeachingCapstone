@@ -1,0 +1,9 @@
+extends layout
+
+block toolbar
+    a(href="/mainPage") Back
+block content
+    h2 #{assignName}
+    table(id="container")
+
+    script(src="js/gradeView.js")

@@ -39,7 +39,7 @@ $(document).ready(function () {
                         setErrorText(data.error);
                     } else {
                         //go to main page becuase of succesful login
-                        window.location.href = '/mainPage.html';
+                        window.location.href = '/mainPage';
                     }
                 })
                 .catch(error => {

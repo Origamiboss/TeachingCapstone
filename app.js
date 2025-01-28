@@ -16,6 +16,7 @@ var signUpRouter = require('./routes/signUp');
 var mainPageRouter = require('./routes/mainPage');
 var assignmentViewerRouter = require('./routes/assignmentView');
 var assignmentEditorRouter = require('./routes/assignmentEditor');
+var gradeRouter = require('./routes/gradeView');
 
 var app = express();
 
@@ -49,7 +50,7 @@ app.use('/signUp', signUpRouter);
 app.use('/mainPage', mainPageRouter);
 app.use('/assignmentView', assignmentViewerRouter);
 app.use('/assignmentEditor', assignmentEditorRouter);
-
+app.use('/gradeView', gradeRouter);
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {
     next(createError(404));

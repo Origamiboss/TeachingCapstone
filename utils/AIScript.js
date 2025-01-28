@@ -26,7 +26,7 @@ const AIScript = {
 
         try {
             // Combine the prompt and extracted text into a single string for the model
-            const combinedInput = `Generate ${numOfQuestions} questions on this information (${pdfText}) in JSON format with {question: , correctAnswer: , wrongAnswers: }, One correct answer and Three wrong answers.`;
+            const combinedInput = `Generate ${numOfQuestions} questions on this information (${pdfText}) in JSON format with {question: , correctAnswer: , wrongAnswers: }, One correct answer and Three wrong answers. ${prompt}`;
 
             
             // Ping OpenAI

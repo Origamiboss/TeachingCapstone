@@ -12,7 +12,7 @@ window.onload = function () {
         .then(data => {
             if (data.error) {
                 // Handle error
-                alert(data.error);
+                console.log(data.error);
             } else {
                 var questions = data.questions;
                 var answers = data.answers;
@@ -27,7 +27,7 @@ window.onload = function () {
         })
         .catch(error => {
             // Handle fetch error
-            alert(error);
+            console.log(error);
         });
 
     console.log("Everything is loaded!");

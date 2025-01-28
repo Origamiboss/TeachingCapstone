@@ -17,7 +17,11 @@ router.post('/findClasses', async (req, res) => {
         const result = await dbUtils.findClasses(username, role);
 
         if (result && result.classes) {
-            return res.json({ status: 'success', classes: result.classes });
+            if (role === "student") {
+                return res.json({ status: 'success', classes: result.classes });
+            } else {
+                return res.json({ status: 'success', classes: result.classes, ids:result.ids });
+            }
         } else {
             return res.status(400).json({ error: 'No classes found' });
         }
@@ -126,7 +130,7 @@ router.post('/makeAssignment', async (req, res) => {
         return res.json({ status: 'error', error: err });
     }
 });
-
+ 
 router.post('/editAssignment', async (req, res) => {
     const { className, assignId, assignName, dueDate } = req.body;
     try {
@@ -155,5 +159,24 @@ router.post('/removeAssignment', async (req, res) => {
     }
 
     
+});
+
+router.post('/seeGrades', async (req, res) => {
+    const { assignId, assignName } = req.body;
+    //set up the needed data
+    req.session.assignId = assignId;
+    req.session.assignName = assignName;
+    return res.json({ status: 'success' });
+});
+router.post('/deleteClass', async (req, res) => {
+    //gather data
+    const { className } = req.body;
+    const username = req.session.username;
+    try {
+        await dbUtils.deleteClass(className, username);
+        return res.json({ status: 'success' });
+    } catch (error) {
+        return res.json({ error: error });
+    }
 });
 module.exports = router;

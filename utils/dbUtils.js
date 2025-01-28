@@ -76,7 +76,7 @@ const dbUtils = {
             if (role === "student") {
                 sql = 'SELECT class.name FROM class, profileClass, profile WHERE profile.username = ? AND profileClass.profileName = profile.username AND class.id = profileClass.classId';
             } else if (role === "teacher") {
-                sql = 'SELECT DISTINCT class.name FROM class JOIN profile ON class.teacherName = profile.username WHERE profile.username = ?';
+                sql = 'SELECT DISTINCT class.name, class.id FROM class JOIN profile ON class.teacherName = profile.username WHERE profile.username = ?';
             } else {
                 return reject("Invalid role");
             }
@@ -92,6 +92,10 @@ const dbUtils = {
                 }
 
                 const classNames = result.map(row => row.name); // Extract class names
+                if (role === "teacher") {
+                    const classId = result.map(row => row.id);
+                    return resolve({ status: 'success', classes: classNames, ids: classId });
+                }
                 return resolve({ status: 'success', classes: classNames });
             });
         });
@@ -419,7 +423,82 @@ const dbUtils = {
             throw error; // Optionally, rethrow or handle the error as needed
         }
         
+    },
+    getGrades: async (assignId) => {
+        try {
+            const sql = 'SELECT * FROM grade WHERE assignId = ?';
+            // Use the promise-based API
+            const [rows] = await con.promise().query(sql, [assignId]);
+            return rows; // `rows` contains the result of the query
+        } catch (error) {
+            console.error("Error in finding grades", error);
+            throw error;
+        }
+    },
+    deleteClass: async function (className, username) {
+        try {
+            // Start transaction
+            await con.promise().query('START TRANSACTION');
+
+            // Locate the class
+            const [classes] = await con.promise().query(
+                'SELECT id FROM class WHERE name = ? AND teacherName = ?',
+                [className, username]
+            );
+
+            for (const { id: classId } of classes) {
+                // Remove all profile class connections
+                await con.promise().query(
+                    'DELETE FROM profileClass WHERE classId = ?',
+                    [classId]
+                );
+
+                // Find assignments for the class
+                const [assignments] = await con.promise().query(
+                    'SELECT id FROM assignment WHERE className = ?',
+                    [className]
+                );
+
+                for (const { id: assignId } of assignments) {
+                    // Remove all related grades, answers, and questions
+                    await con.promise().query(
+                        'DELETE FROM grade WHERE assignId = ?',
+                        [assignId]
+                    );
+                    await con.promise().query(
+                        'DELETE FROM answer WHERE assignId = ?',
+                        [assignId]
+                    );
+                    await con.promise().query(
+                        'DELETE FROM question WHERE assignId = ?',
+                        [assignId]
+                    );
+                }
+
+                // Delete all assignments for the class
+                await con.promise().query(
+                    'DELETE FROM assignment WHERE className = ?',
+                    [className]
+                );
+
+                // Finally, delete the class itself
+                await con.promise().query(
+                    'DELETE FROM class WHERE id = ?',
+                    [classId]
+                );
+            }
+
+            // Commit transaction
+            await con.promise().query('COMMIT');
+        } catch (error) {
+            // Rollback transaction on error
+            await con.promise().query('ROLLBACK');
+            console.error('Error in deleting class', error);
+            throw error;
+        }
     }
+
+
 
 };
 

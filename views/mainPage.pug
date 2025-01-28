@@ -8,13 +8,17 @@ block toolbar
     button(onclick="findClass()") Change Class
     button(onclick="logOut()") Sign Out
 block content
+    //display class id
+    if(role == "teacher")
+        h3(id="classIdDisplay") Class ID: Not Found
+        button(id="removeClass", onclick="removeClass()") Remove Class: 
     div(class="assignments")
         div
             h3 Assignments:
             //check if teacher
             if(role == 'teacher')
                 button(onclick="toggleCreateAssignment()") Add Assignment
-        div(id="assignmentHolder")
+        table(id="assignmentHolder")
     div(id="changeClassOverlay", class="overlay-container")
         div(class="popup-box")
             h2(style="color: green;") Select Class
