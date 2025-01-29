@@ -1,0 +1,82 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.banner {
+    background-color: #4CAF50;
+    color: white;
+    text-align: center;
+    padding: 50px;
+}
+
+.banner h1 {
+    margin: 0;
+    font-size: 3em;
+}
+
+.banner p {
+    font-size: 1.2em;
+}
+
+.banner a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.toolbar {
+    background-color: slategray;
+    color: white;
+    overflow: hidden;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px;
+}
+
+    .toolbar a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+        padding: 12px 16px;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+    }
+
+.toolbar a:hover {
+    background-color: #575757;
+    border-radius: 5px;
+}
+
+/* Active button (optional, to highlight the current page) */
+.toolbar a.active {
+    background-color: #4CAF50;
+    border-radius: 5px;
+}
+.toolbar button {
+    background-color: transparent; /* Ensure no background */
+    border: none;
+    padding: 12px 16px; /* Same padding as the links */
+    font-family: Arial, sans-serif;
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 16px; /* Match font size of links */
+    display: inline-block; /* Same display as links */
+    transition: background-color 0.3s ease, border-radius 0.3s ease;
+}
+
+.toolbar button:hover {
+    background-color: #575757; /* Same hover effect as links */
+    border-radius: 5px; /* Rounded corners for button on hover */
+}
+
+.tutorial img {
+    width: 800px;
+    height: 400px;
+}
+
+
+
+

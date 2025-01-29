@@ -1,4 +1,6 @@
 extends layout
+block header
+    link(rel='stylesheet', href='/stylesheets/mainPage.css')
 
 block toolbar
     if(role == 'teacher')   
@@ -11,14 +13,14 @@ block content
     //display class id
     if(role == "teacher")
         h3(id="classIdDisplay") Class ID: Not Found
-        button(id="removeClass", onclick="removeClass()") Remove Class: 
+        button(id="removeClass", onclick="removeClass()") Remove Class 
     div(class="assignments")
         div
             h3 Assignments:
             //check if teacher
             if(role == 'teacher')
-                button(onclick="toggleCreateAssignment()") Add Assignment
-        table(id="assignmentHolder")
+                button(class="btn-add-assignment", onclick="toggleCreateAssignment()") Add Assignment
+        table(class="assignmentHolder", id="assignmentHolder")
     div(id="changeClassOverlay", class="overlay-container")
         div(class="popup-box")
             h2(style="color: green;") Select Class

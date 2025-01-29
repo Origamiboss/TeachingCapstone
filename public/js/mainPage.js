@@ -70,6 +70,7 @@ function findClass() {
                     for (let i = 0; i < classNames.length; i++) {
                         let button = document.createElement('button');
                         button.innerHTML = classNames[i];
+                        button.classList.add("btn-class");
                         button.onclick = function () {
                             selectClass(classNames[i], true);
                             //set class id for the selected class if your a teacher
@@ -187,6 +188,25 @@ function selectClass(className, preventDefault = false) {
                 var container = document.getElementById("assignmentHolder");
                 container.innerHTML = '';
 
+                //add the headers
+                var row = document.createElement('tr');
+                if (role === "teacher") {
+                    const headers = ["Assignment Name", "Due Date", "Edit", "See Grades"];
+                    headers.forEach(text => {
+                        const th = document.createElement('th');
+                        th.textContent = text; // Use textContent instead of innerHTML for safety
+                        row.appendChild(th);
+                    });
+                } else {
+                    const headers = ["Assignment Name", "Due Date", "Grades"];
+                    headers.forEach(text => {
+                        const th = document.createElement('th');
+                        th.textContent = text; // Use textContent instead of innerHTML for safety
+                        row.appendChild(th);
+                    });
+                }
+                container.appendChild(row);
+
                 if (assignments.length === 0) {
                     const holder = document.createElement('tr');
                     let noAssignmentsMessage = document.createElement('td');
@@ -200,18 +220,37 @@ function selectClass(className, preventDefault = false) {
 
                         const assignmentButton = document.createElement('td');
                         let button = document.createElement('button');
+                        button.classList.add("btn-assignment");
                         if (role == 'student') {
-                            button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate + " Grade: " + assignments[i].grade;
+                            button.innerHTML = assignments[i].name;
                             assignmentButton.appendChild(button);
                             holder.appendChild(assignmentButton);
+
+                            //add the due date
+                            let td = document.createElement('td');
+                            td.textContent = assignments[i].dueDate; // Use textContent instead of innerHTML for safety
+                            holder.appendChild(td);
+                            //add the grade
+                            td = document.createElement('td');
+                            td.textContent = assignments[i].grade; // Use textContent instead of innerHTML for safety
+                            holder.appendChild(td);
+
+
                         } else if (role == 'teacher') {
-                            button.innerHTML = assignments[i].name + " Due: " + assignments[i].dueDate;
+                            button.innerHTML = assignments[i].name;
                             assignmentButton.appendChild(button);
                             holder.appendChild(assignmentButton);
 
                             const editButton = document.createElement('td');
+
+                            //add the due date
+                            let td = document.createElement('td');
+                            td.textContent = assignments[i].dueDate; // Use textContent instead of innerHTML for safety
+                            holder.appendChild(td);
+
                             //make the edit assignment button
                             let newbutton = document.createElement('button');
+                            newbutton.classList.add("btn-assignment");
                             newbutton.innerHTML = "Edit";
 
                             editButton.appendChild(newbutton);
@@ -223,6 +262,7 @@ function selectClass(className, preventDefault = false) {
                             //see grades button
                             const gradeButton = document.createElement('td');
                             let newestbutton = document.createElement('button');
+                            newestbutton.classList.add("btn-assignment");
                             newestbutton.innerHTML = "Grades";
 
                             gradeButton.appendChild(newestbutton);

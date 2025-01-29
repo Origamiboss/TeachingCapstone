@@ -1,9 +1,15 @@
 extends layout
 
+block header
+    link(rel='stylesheet', href='/stylesheets/gradeView.css')
+
 block toolbar
     a(href="/mainPage") Back
 block content
-    h2 #{assignName}
-    table(id="container")
+    h1(class="title") #{assignName}
+    table(class="gradeHolder", id="container")
+        tr
+            th Name
+            th Grade
 
     script(src="js/gradeView.js")
