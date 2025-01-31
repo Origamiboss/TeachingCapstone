@@ -1,0 +1,25 @@
+.tutorial img {
+    width: 800px;
+    height: 400px;
+}
+.banner {
+    background-color: #4CAF50;
+    color: white;
+    text-align: center;
+    padding: 50px;
+}
+
+    .banner h1 {
+        margin: 0;
+        font-size: 3em;
+    }
+
+    .banner p {
+        font-size: 1.2em;
+    }
+
+    .banner a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+    }

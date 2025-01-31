@@ -1,0 +1,32 @@
+.input{
+    margin:1em;
+}
+    .input div{
+        margin: 5px;
+    }
+    .input .btn-login {
+        outline: none;
+        height: 40px;
+        text-align: center;
+        width: 130px;
+        border-radius: 40px;
+        background: #fff;
+        border: 2px solid green;
+        color: green;
+        letter-spacing: 1px;
+        text-shadow: 0;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        margin:5px;
+    }
+        .input .btn-login:hover {
+            color: white;
+            background-color: green;
+        }
+
+        .input .btn-login:active {
+            letter-spacing: 2px;
+        }
+.error{
+    color: red;
+}

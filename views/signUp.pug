@@ -8,7 +8,7 @@ block toolbar
         a(id="sign", href="/login") Log In
 
 block content
-    div(class="login")
+    div(class="input")
         div
             label Username:
             input(type="text", id="username")
@@ -20,10 +20,13 @@ block content
             input(type="password", id="repassword")
         div
             label Teacher
-            input(id="teacherBox", type="checkbox", checked)
+            input(id="teacherBox", type="checkbox", class="checkbox")
+        div
             label Student
-            input(id="studentBox", type="checkbox")
-        button(id="SubmitButton", type="submit") Sign Up
+            input(id="studentBox", type="checkbox", class="checkbox", checked)
+        button(class="btn-signUp", id="SubmitButton", type="submit") Sign Up
+            div(class="arrow-wrapper")
+                div(class="arrow")
         div(id="error", class="error", style="visibility: hidden;")
             p(id="errorText") a
 
