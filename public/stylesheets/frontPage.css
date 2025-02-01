@@ -1,7 +1,25 @@
 .tutorial img {
-    width: 800px;
-    height: 400px;
+    max-width: 75%;
+    height: auto;
+    text-align:center;
 }
+    
+.tutorial h1 {
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 26px;
+    letter-spacing: 1px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: 16px 0;
+    grid-gap: 22px;
+}
+    .tutorial h1:before, .tutorial h1:after {
+        content: " ";
+        display: block;
+        border-bottom: 2px solid #ccc;
+        background-color: white;
+    }
 .banner {
     background-color: #4CAF50;
     color: white;
