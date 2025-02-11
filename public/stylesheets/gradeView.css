@@ -21,6 +21,7 @@
     border-collapse: collapse;
     text-align:center;
     width: 25%;
+    margin: 0px 10px 0px 10px;
 }
     .gradeHolder td, .gradeHolder th {
         border: 1px solid #ddd;

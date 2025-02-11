@@ -1,3 +1,7 @@
+.tutorial, .information{
+    padding-left: 10px;
+    padding-right: 10px;
+}
 .tutorial img {
     max-width: 75%;
     height: auto;

@@ -52,8 +52,9 @@ function generateQuestion(questionNum, prompt, answers) {
     questionElement.appendChild(questionPrompt);
 
     // Create answers for the question
-    var answersList = document.createElement('div');
+    var answersList = document.createElement('table');
     answers.forEach(answer => {
+        var tr = document.createElement('tr');
         var answerItem = document.createElement('button');
         answerItem.innerHTML = answer.prompt;  // Assuming answer has a prompt field
 
@@ -70,7 +71,8 @@ function generateQuestion(questionNum, prompt, answers) {
             selectedAnswers.set(questionNum, answer.prompt);  // Store the selected answer for this question
         });
 
-        answersList.appendChild(answerItem);
+        tr.appendChild(answerItem);
+        answersList.appendChild(tr);
     });
 
     questionElement.appendChild(answersList);

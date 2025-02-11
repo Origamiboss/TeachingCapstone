@@ -215,6 +215,8 @@ function selectClass(className, preventDefault = false) {
                     container.appendChild(holder);
                 } else {
                     for (let i = 0; i < assignments.length; i++) {
+                        let canSeeGrade = true;
+
                         //create the row
                         const holder = document.createElement('tr');
 
@@ -233,6 +235,9 @@ function selectClass(className, preventDefault = false) {
                             //add the grade
                             td = document.createElement('td');
                             td.textContent = assignments[i].grade; // Use textContent instead of innerHTML for safety
+                            if (assignments[i].grade == null) {
+                                canSeeGrade = false;
+                            }
                             holder.appendChild(td);
 
 
@@ -273,7 +278,7 @@ function selectClass(className, preventDefault = false) {
                         }
 
                         button.onclick = function () {
-                            if (role == 'student') {
+                            if (role == 'student' && !canSeeGrade) {
                                 fetch('/mainPage/goToAssignment', {
                                     method: 'POST',
                                     headers: {
