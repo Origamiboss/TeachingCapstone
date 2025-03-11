@@ -4,6 +4,7 @@ var router = express.Router();
 var dbUtils = require('../utils/dbUtils'); // Use relative path to your dbUtils
 var AIScript = require('../utils/AIScript');
 const path = require('path');
+const fs = require('fs');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -79,6 +80,16 @@ router.post('/generateQuestions', upload.single('pdf'), async function (req, res
         // If file and form data are valid, process the questions
         var questions = await AIScript.generateQuestions(numOfQuestions, prompt, file);  // Pass file if needed
 
+        //remove pdf file
+        const filePath = file.path; // Path to the uploaded file
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error('Error deleting file:', err);
+            } else {
+                console.log('File deleted successfully');
+            }
+        });
+        
         return res.json({ status: 'success', questions: questions });
     } catch (err) {
         console.error(err);
